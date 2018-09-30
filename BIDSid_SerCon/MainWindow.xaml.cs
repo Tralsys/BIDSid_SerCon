@@ -194,7 +194,7 @@ namespace BIDSid_SerCon
     static IntPtr hSharedMemory = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, size, SRAMName);
     static IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
     BIDSSharedMemoryData BSMD = new BIDSSharedMemoryData();
-    private static byte[] GetAndWriteByte(byte[] GetArray)
+    private static byte[] GetAndWriteByte(byte[] GetArray,int Version)
     {
       byte[] ReturnArray = new byte[32];
       ReturnArray[0] = GetArray[0];
@@ -203,20 +203,42 @@ namespace BIDSid_SerCon
       ReturnArray[31] = GetArray[31];
       switch (Convert.ToInt16(GetArray.Take(2).ToArray()))
       {
-        case 0:
-          break;
+        case 12://CloseCall
+          return GetArray;
+        case 14://SpecInfo
+
+          return ReturnArray;
+        case 15://StateInfo
+
+          return ReturnArray;
+        case 16://State2Info
+
+          return ReturnArray;
+        case 20://SoundInfo
+
+          return ReturnArray;
+        case 21://PanelInfo
+
+          return ReturnArray;
       }
-      return ReturnArray;
+      return ErrorCallArray;
     }
-
-
+    static byte[] ErrorCallArray = new byte[32];
+    static readonly int RetryNum = 32;
     private static void SerialDoing()
     {
       Disposing = false;
+      byte[] ECA = new byte[32];
+      ECA.SetValue(BitConverter.GetBytes((short)13), 0);//Error Callのヘッダー
+      ECA.SetValue(new byte[2] { 0xFE, 0xFE }, 30);//接尾辞
+      ErrorCallArray = ECA;
       while (!Disposing)
       {
+        int ErrorCount = 0;
         using (SerialPort SP = new SerialPort(Properties.Settings.Default.COMPortName, Properties.Settings.Default.BaudRateNum))
         {
+          int VersionNum = 0;
+          bool IsStartHedGot = false;
           try
           {
             SP.Open();
@@ -230,14 +252,86 @@ namespace BIDSid_SerCon
             }
           }
           byte[] b = new byte[32];
-          while (!mw.IsSettingChanged || !Disposing || SP.IsOpen)
+          while (VersionNum <= 0 && !mw.IsSettingChanged && !Disposing && SP.IsOpen)//バージョンチェックループ
           {
             b = new byte[32];
             SP.Read(b, 0, 32);
-            SP.Write(GetAndWriteByte(b), 0, 32);
-            if (Convert.ToInt16(b.Take(2).ToArray()) == 11)
+            if (Convert.ToInt16(b.Take(2).ToArray()) == 10 && b.Skip(30).ToArray() == new byte[2] { 0xFE, 0xFE }) //Version Check
             {
-              SP.Close();
+              VersionNum = Convert.ToInt32(b.Skip(2).Take(4).ToArray());
+            }
+            else
+            {
+              SP.Write(ErrorCallArray, 0, 32);
+              ErrorCount++;
+              if (ErrorCount > RetryNum)
+              {
+                MessageBoxResult mbr = MessageBox.Show("バージョン取得処理\n通信エラーが既定の回数以上発生しました。" + "\nエラー回数をリセットし、再接続を試行しますか？", "BIDS SerialConverter", MessageBoxButton.YesNo);
+                if (mbr == MessageBoxResult.No)
+                {
+                  Disposing = true;
+                }
+                else
+                {
+                  ErrorCount = 0;
+                }
+              }
+            }
+          }
+          while (!IsStartHedGot && !mw.IsSettingChanged && !Disposing && SP.IsOpen)//起動確認ループ
+          {
+            b = new byte[32];
+            SP.Read(b, 0, 32);
+            if (Convert.ToInt16(b.Take(2).ToArray()) == 11 && b.Skip(30).ToArray() == new byte[2] { 0xFE, 0xFE }) //Start Check
+            {
+              IsStartHedGot = true;
+            }
+            else
+            {
+              SP.Write(ErrorCallArray, 0, 32);
+              ErrorCount++;
+              if (ErrorCount > RetryNum)
+              {
+                MessageBoxResult mbr = MessageBox.Show("通信同期処理\n通信エラーが既定の回数以上発生しました。" + "\nエラー回数をリセットし、再接続を試行しますか？", "BIDS SerialConverter", MessageBoxButton.YesNo);
+                if (mbr == MessageBoxResult.No)
+                {
+                  Disposing = true;
+                }
+                else
+                {
+                  ErrorCount = 0;
+                }
+              }
+            }
+          }
+          while (!mw.IsSettingChanged && !Disposing && SP.IsOpen)
+          {
+            b = new byte[32];
+            SP.Read(b, 0, 32);
+            if (b.Skip(30).ToArray() == new byte[2] { 0xFE, 0xFE })
+            {
+              SP.Write(GetAndWriteByte(b,VersionNum), 0, 32);
+              if (Convert.ToInt16(b.Take(2).ToArray()) == 12)
+              {
+                SP.Close();
+              }
+            }
+            else
+            {
+              SP.Write(ErrorCallArray, 0, 32);
+              ErrorCount++;
+              if (ErrorCount > RetryNum)
+              {
+                MessageBoxResult mbr = MessageBox.Show("対話式通信処理\n通信エラーが既定の回数以上発生しました。" + "\nエラー回数をリセットし、再接続を試行しますか？", "BIDS SerialConverter", MessageBoxButton.YesNo);
+                if (mbr == MessageBoxResult.No)
+                {
+                  Disposing = true;
+                }
+                else
+                {
+                  ErrorCount = 0;
+                }
+              }
             }
           }
           if (SP.IsOpen) SP.Close();
