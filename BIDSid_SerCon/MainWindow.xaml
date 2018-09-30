@@ -5,8 +5,126 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BIDSid_SerCon"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+        Loaded="OnLoad"
+        WindowStyle="SingleBorderWindow"
+        Title="設定 | BIDSシリアルコンバーター(id)"
+        MinWidth="240pt"
+        Height="270pt"
+        Width="240pt">
+  <Grid>
+    <Label Content="設定"
+           FontSize="32"
+           Margin="12pt"
+           HorizontalAlignment="Left"
+           VerticalAlignment="Top"/>
+    <Label Content="BIDSpp.dll 接続状況"
+           FontSize="14"
+           Margin="0,30pt,60pt,0"
+           HorizontalAlignment="Right"
+           VerticalAlignment="Top"/>
+    <Ellipse Name="BIDSppConnectEllipse"
+             Fill="Red"
+             Margin="15pt"
+             HorizontalAlignment="Right"
+             Height="39pt"
+             Width="39pt"
+             Stroke="Black"
+             VerticalAlignment="Top">
+      <Ellipse.Effect>
+        <DropShadowEffect ShadowDepth="3" Opacity="0.5"/>
+      </Ellipse.Effect>
+    </Ellipse>
+    <Label Name="BIDSppVerLab"
+           Content=""
+           FontSize="16"
+           Margin="15pt"
+           Height="39pt"
+           Width="39pt"
+           HorizontalContentAlignment="Center"
+           VerticalContentAlignment="Center"
+           HorizontalAlignment="Right"
+           VerticalAlignment="Top"/>
+    <Label Content="COMポート"
+           Height="24pt"
+           FontSize="14"
+           Margin="30pt,60pt,0,0"
+           VerticalContentAlignment="Center"
+           HorizontalAlignment="Left"
+           VerticalAlignment="Top"/>
+    <ComboBox Name="COMPortListBox"
+              Margin="90pt,60pt,0,0"
+              FontSize="14"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Top"
+              VerticalContentAlignment="Center"
+              Height="24pt"
+              Width="90pt"/>
+    <Label Content="BaudRate"
+           Height="24pt"
+           FontSize="14"
+           Margin="30pt,120pt,0,0"
+           VerticalContentAlignment="Center"
+           HorizontalAlignment="Left"
+           VerticalAlignment="Top"/>
+    <ComboBox Name="BaudRateListBox"
+              Margin="90pt,120pt,0,0"
+              FontSize="14"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Top"
+              VerticalContentAlignment="Center"
+              Height="24pt"
+              Width="90pt"/>
+
+    <Ellipse Name="SerialConnectEllipse"
+             Fill="Red"
+             Margin="45pt,0,0,45pt"
+             HorizontalAlignment="Left"
+             Height="39pt"
+             Width="39pt"
+             Stroke="Black"
+             VerticalAlignment="Bottom">
+      <Ellipse.Effect>
+        <DropShadowEffect ShadowDepth="3" Opacity="0.5"/>
+      </Ellipse.Effect>
+    </Ellipse>
+    <Label Content="シリアル通信 接続状況"
+           Height="24pt"
+           FontSize="14"
+           Margin="84pt,0,0,42pt"
+           VerticalContentAlignment="Center"
+           HorizontalAlignment="Left"
+           VerticalAlignment="Bottom"/>
+
+    <Grid Background="LightGray"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Bottom"
+          Height="30pt">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Button Click="OnLoad"
+              Content="再読込"
+              Grid.Column="0"
+              Margin="3pt"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
+      <Button Click="CancelEv"
+              IsCancel="True"
+              Content="キャンセル"
+              Grid.Column="2"
+              Margin="3pt"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
+      <Button Click="EnterEv"
+              IsDefault="True"
+              Content="ＯＫ"
+              Grid.Column="3"
+              Margin="3pt"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
     </Grid>
+  </Grid>
 </Window>
