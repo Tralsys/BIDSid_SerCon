@@ -58,9 +58,6 @@ namespace BIDSid_SerCon
       BaudRateListBox.ItemsSource = BaudRateList;
       COMPortListBox.SelectedItem = Properties.Settings.Default.COMPortName;
       BaudRateListBox.SelectedItem = Properties.Settings.Default.BaudRateNum;
-
-
-      BIDSppVerLab.Content = ID.size.ToString();
     }
     private readonly List<int> BaudRateList = new List<int>() { 4800, 9600, 19200, 38400, 57600, 115200 };
     private void EnterEv(object sender, RoutedEventArgs e)
@@ -83,9 +80,11 @@ namespace BIDSid_SerCon
     public event Mackoy.Bvets.InputEventHandler LeverMoved;
     public event Mackoy.Bvets.InputEventHandler KeyDown;
     public event Mackoy.Bvets.InputEventHandler KeyUp;
+
     static public bool IsSerialConnected { get; private set; } = false;
     static public bool IsBIDSppConnected { get; private set; } = false;
     static public int BIDSppVersion { get; private set; } = 0;
+
     static private MainWindow mw = new MainWindow();
     public void Configure(System.Windows.Forms.IWin32Window owner)
     {
@@ -121,7 +120,7 @@ namespace BIDSid_SerCon
 
     }
 
-    private static string SRAMName = "BIDSSharedMem";
+    private static readonly string SRAMName = "BIDSSharedMem";
     //SECTION_ALL_ACCESS=983071
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern IntPtr CreateFileMapping(UIntPtr hFile, IntPtr lpAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
@@ -137,49 +136,139 @@ namespace BIDSid_SerCon
 
     public struct Spec
     {
-      public int B;  //ブレーキ段数
-      public int P;  //ノッチ段数
-      public int A;  //ATS確認段数
-      public int J;  //常用最大段数
-      public int C;  //編成車両数
+      /// <summary>
+      /// ブレーキ段数
+      /// </summary>
+      public int B;
+      /// <summary>
+      /// ノッチ段数
+      /// </summary>
+      public int P;
+      /// <summary>
+      /// ATS確認段数
+      /// </summary>
+      public int A;
+      /// <summary>
+      /// 常用最大段数
+      /// </summary>
+      public int J;
+      /// <summary>
+      /// 編成車両数
+      /// </summary>
+      public int C;
     };
     public struct State
     {
-      public double X; //列車位置[m]
-      public float V;  //列車速度[km/h]
-      public int T;    //0時からの経過時間[ms]
-      public float BC; //BC圧力[kPa]
-      public float MR; //MR圧力[kPa]
-      public float ER; //ER圧力[kPa]
-      public float BP; //BP圧力[kPa]
-      public float SAP;  //SAP圧力[kPa]
-      public float I;  //電流[A]
+      /// <summary>
+      /// 列車位置[m]
+      /// </summary>
+      public double X;
+      /// <summary>
+      /// 列車速度[km/h]
+      /// </summary>
+      public float V;
+      /// <summary>
+      /// 0時からの経過時間[ms]
+      /// </summary>
+      public int T;
+      /// <summary>
+      /// BC圧力[kPa]
+      /// </summary>
+      public float BC;
+      /// <summary>
+      /// MR圧力[kPa]
+      /// </summary>
+      public float MR;
+      /// <summary>
+      /// ER圧力[kPa]
+      /// </summary>
+      public float ER;
+      /// <summary>
+      /// BP圧力[kPa]
+      /// </summary>
+      public float BP;
+      /// <summary>
+      /// SAP圧力[kPa]
+      /// </summary>
+      public float SAP;
+      /// <summary>
+      /// 電流[A]
+      /// </summary>
+      public float I;
     };
     public struct Hand
     {
-      public int B;  //ブレーキハンドル位置
-      public int P;  //ノッチハンドル位置
-      public int R;  //レバーサーハンドル位置
-      public int C;  //定速制御状態
+      /// <summary>
+      /// ブレーキハンドル位置
+      /// </summary>
+      public int B;
+      /// <summary>
+      /// ノッチハンドル位置
+      /// </summary>
+      public int P;
+      /// <summary>
+      /// レバーサーハンドル位置
+      /// </summary>
+      public int R;
+      /// <summary>
+      /// 定速制御状態
+      /// </summary>
+      public int C;
     };
     public struct Beacon
     {
-      public int Num;  //Beaconの番号
-      public int Sig;  //対応する閉塞の現示番号
-      public float X;  //対応する閉塞までの距離[m]
-      public int Data; //Beaconの第三引数の値
+      /// <summary>
+      /// Beaconの番号
+      /// </summary>
+      public int Num;
+      /// <summary>
+      /// 対応する閉塞の現示番号
+      /// </summary>
+      public int Sig;
+      /// <summary>
+      /// 対応する閉塞までの距離[m]
+      /// </summary>
+      public float X;
+      /// <summary>
+      /// Beaconの第三引数の値
+      /// </summary>
+      public int Data;
     };
     //Version 200ではBeaconData,IsKeyPushed,SignalSetIntはDIsabled
     public struct BIDSSharedMemoryData
     {
+      /// <summary>
+      /// SharedMemoryが有効かどうか
+      /// </summary>
       public bool IsEnabled;
+      /// <summary>
+      /// SharedRAMの構造バージョン
+      /// </summary>
       public int VersionNum;
+      /// <summary>
+      /// 車両スペック情報
+      /// </summary>
       public Spec SpecData;
+      /// <summary>
+      /// 車両状態情報
+      /// </summary>
       public State StateData;
+      /// <summary>
+      /// ハンドル位置情報
+      /// </summary>
       public Hand HandleData;
+      /// <summary>
+      /// ドアが閉まっているかどうか
+      /// </summary>
       public bool IsDoorClosed;
+      /// <summary>
+      /// Panelの表示番号配列
+      /// </summary>
       [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
       public int[] Panel;
+      /// <summary>
+      /// Soundの値配列
+      /// </summary>
       [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
       public int[] Sound;
 
@@ -190,41 +279,114 @@ namespace BIDSid_SerCon
       //public bool[] IsKeysPushed;
       //public int SignalSetInt;
     };
-    static public uint size = (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData));
+    static private readonly uint size = (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData));
     static IntPtr hSharedMemory = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, size, SRAMName);
     static IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
-    BIDSSharedMemoryData BSMD = new BIDSSharedMemoryData();
+    static BIDSSharedMemoryData BSMD = new BIDSSharedMemoryData();
+
+    static int PanelMaxIndex = 255;
+    static int SoundMaxIndex = 255;
+
+    /// <summary>
+    /// 取得した配列とバージョン情報から、返信するべき配列を返す。
+    /// </summary>
+    /// <param name="GetArray">取得した byte 配列</param>
+    /// <param name="Version">構造バージョン情報</param>
+    /// <returns>送信する byte 配列</returns>
     private static byte[] GetAndWriteByte(byte[] GetArray,int Version)
     {
+      if (Version != 200) return ErrorCallArray;//現時点で対応してる構造バージョンは200のみ
+      if (GetArray.Skip(30).Take(2) != new byte[2] { 0xFE, 0xFE }) return ErrorCallArray;
       byte[] ReturnArray = new byte[32];
       ReturnArray[0] = GetArray[0];
       ReturnArray[1] = GetArray[1];
       ReturnArray[30] = GetArray[30];
       ReturnArray[31] = GetArray[31];
+      BSMD = (BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData));
+      //ヘッダによって分類して、対応する情報を代入してく。
       switch (Convert.ToInt16(GetArray.Take(2).ToArray()))
       {
         case 12://CloseCall
           return GetArray;
+
         case 14://SpecInfo
-
+          BitConverter.GetBytes((short)BSMD.SpecData.B).CopyTo(ReturnArray, 2);//2,3 => B Handle
+          BitConverter.GetBytes((short)BSMD.SpecData.P).CopyTo(ReturnArray, 4);//4,5 => P Handle
+          BitConverter.GetBytes((short)BSMD.SpecData.A).CopyTo(ReturnArray, 6);//6,7 => ATS Check
+          BitConverter.GetBytes((short)BSMD.SpecData.J).CopyTo(ReturnArray, 8);//8,9 => B67
+          BitConverter.GetBytes((byte)BSMD.SpecData.C).CopyTo(ReturnArray, 10);//10  => Car Num
+          //11-29=>null
           return ReturnArray;
+
         case 15://StateInfo
-
+          BitConverter.GetBytes(BSMD.StateData.X).CopyTo(ReturnArray, 2);//2-9 => Location
+          BitConverter.GetBytes(BSMD.StateData.V).CopyTo(ReturnArray, 10);//10-13 => Speed
+          BitConverter.GetBytes(BSMD.StateData.I).CopyTo(ReturnArray, 14);//14-17 => Current
+          //18-21 => Voltage(未実装)
+          BitConverter.GetBytes((short)BSMD.HandleData.B).CopyTo(ReturnArray, 22);//22,23 => B Handle
+          BitConverter.GetBytes((short)BSMD.HandleData.P).CopyTo(ReturnArray, 24);//24,25 => P Handle
+          BitConverter.GetBytes((byte)BSMD.HandleData.R).CopyTo(ReturnArray, 26);//26 => Lever
+          //27 => ConstSP(未実装)
+          //28,29 => null
           return ReturnArray;
+
         case 16://State2Info
-
+          BitConverter.GetBytes(BSMD.StateData.BC).CopyTo(ReturnArray, 2);//2 - 5 => BC Pres
+          BitConverter.GetBytes(BSMD.StateData.MR).CopyTo(ReturnArray, 6);//6 - 9 => MR Pres
+          BitConverter.GetBytes(BSMD.StateData.ER).CopyTo(ReturnArray, 10);//10-13 => ER Pres
+          BitConverter.GetBytes(BSMD.StateData.BP).CopyTo(ReturnArray, 14);//14-17 => BP Pres
+          BitConverter.GetBytes(BSMD.StateData.SAP).CopyTo(ReturnArray, 18);//18-21 => SAP Pres
+          BitConverter.GetBytes(BSMD.IsDoorClosed).CopyTo(ReturnArray, 22);//22 => Door Info
+          //23,24=> Sig Num(未実装)
+          TimeSpan ts = new TimeSpan();
+          ts = TimeSpan.FromMilliseconds(BSMD.StateData.T);
+          BitConverter.GetBytes((byte)ts.Hours).CopyTo(ReturnArray, 25);//25 => time(H)
+          BitConverter.GetBytes((byte)ts.Minutes).CopyTo(ReturnArray, 26);//26 => time(M)
+          BitConverter.GetBytes((byte)ts.Seconds).CopyTo(ReturnArray, 27);//27 => time(S)
+          BitConverter.GetBytes((short)ts.Milliseconds).CopyTo(ReturnArray, 28);//28,29 => time(ms)
           return ReturnArray;
+
+        case 18://HandleInput
+                //準備中
+          return ErrorCallArray;
+          //return ReturnArray;
+
         case 20://SoundInfo
-
+          ReturnArray = GetArray;
+          for(int i = 0; i < 7; i++)
+          {
+            short Ind = Convert.ToInt16(GetArray.Skip(2 + 4 * i).Take(2).ToArray());//2 , 3 =>インデックス
+            if (Ind >= 0 && Ind <= SoundMaxIndex) BitConverter.GetBytes((short)BSMD.Sound[Ind]).CopyTo(ReturnArray, 4 + 4 * i);//4 , 5 => 値
+            else BitConverter.GetBytes((short)-1).CopyTo(ReturnArray, 4 + 4 * i);//(繰り返し。不使用箇所は「-1」で埋める)
+          }
           return ReturnArray;
+
         case 21://PanelInfo
-
+          ReturnArray = GetArray;
+          for (int i = 0; i < 7; i++)
+          {
+            short Ind = Convert.ToInt16(GetArray.Skip(2 + 4 * i).Take(2).ToArray());//2 , 3 =>インデックス
+            if (Ind >= 0 && Ind <= PanelMaxIndex) BitConverter.GetBytes((short)BSMD.Panel[Ind]).CopyTo(ReturnArray, 4 + 4 * i);//4 , 5 => 値
+            else BitConverter.GetBytes((short)-1).CopyTo(ReturnArray, 4 + 4 * i);//(繰り返し。不使用箇所は「-1」で埋める)
+          }
           return ReturnArray;
+
+        case 23://KeyInput
+                //準備中
+          return ErrorCallArray;
+        //return ReturnArray;
+
+        default:
+          return ErrorCallArray;
       }
-      return ErrorCallArray;
     }
+
     static byte[] ErrorCallArray = new byte[32];
     static readonly int RetryNum = 32;
+
+    /// <summary>
+    /// シリアル通信を実行する関数
+    /// </summary>
     private static void SerialDoing()
     {
       Disposing = false;
@@ -239,6 +401,8 @@ namespace BIDSid_SerCon
         {
           int VersionNum = 0;
           bool IsStartHedGot = false;
+
+          //ポートオープン試行
           try
           {
             SP.Open();
@@ -252,7 +416,9 @@ namespace BIDSid_SerCon
             }
           }
           byte[] b = new byte[32];
-          while (VersionNum <= 0 && !mw.IsSettingChanged && !Disposing && SP.IsOpen)//バージョンチェックループ
+
+          //バージョンチェックループ
+          while (VersionNum <= 0 && !mw.IsSettingChanged && !Disposing && SP.IsOpen)
           {
             b = new byte[32];
             SP.Read(b, 0, 32);
@@ -278,7 +444,9 @@ namespace BIDSid_SerCon
               }
             }
           }
-          while (!IsStartHedGot && !mw.IsSettingChanged && !Disposing && SP.IsOpen)//起動確認ループ
+          ErrorCount = 0;
+          //起動確認ループ
+          while (!IsStartHedGot && !mw.IsSettingChanged && !Disposing && SP.IsOpen)
           {
             b = new byte[32];
             SP.Read(b, 0, 32);
@@ -304,14 +472,18 @@ namespace BIDSid_SerCon
               }
             }
           }
+          ErrorCount = 0;
+          //対話式通信処理ループ
           while (!mw.IsSettingChanged && !Disposing && SP.IsOpen)
           {
             b = new byte[32];
             SP.Read(b, 0, 32);
+
+            //接尾辞が正常かどうか
             if (b.Skip(30).ToArray() == new byte[2] { 0xFE, 0xFE })
             {
-              SP.Write(GetAndWriteByte(b,VersionNum), 0, 32);
-              if (Convert.ToInt16(b.Take(2).ToArray()) == 12)
+              SP.Write(GetAndWriteByte(b, VersionNum), 0, 32);//受信データを投げて、対応するデータを取得する。
+              if (Convert.ToInt16(b.Take(2).ToArray()) == 12)//Close Call
               {
                 SP.Close();
               }
@@ -334,7 +506,16 @@ namespace BIDSid_SerCon
               }
             }
           }
-          if (SP.IsOpen) SP.Close();
+
+          //ポート解放処理
+          if (SP.IsOpen)
+          {
+            b = new byte[32];
+            b.SetValue(BitConverter.GetBytes((short)12), 0);//CloseCall
+            b.SetValue(new byte[2] { 0xFE, 0xFE }, 30);//接尾辞
+            SP.Write(b, 0, 32);
+            SP.Close();
+          }
           Thread.Sleep(50);
         }
       }
