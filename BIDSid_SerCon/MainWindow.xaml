@@ -105,7 +105,7 @@
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
-      <Button Click="OnLoad"
+      <Button Click="ReLoad"
               Content="再読込"
               Grid.Column="0"
               Margin="3pt"

@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIDSid_SerCon", "BIDSid_SerCon\BIDSid_SerCon.csproj", "{68366A32-0DF3-4E20-AFD0-D9CD9833A2DC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BIDSino", "BIDSino\BIDSino.vcxitems", "{255021FF-0216-4FC3-A878-3667C1D52BD4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
