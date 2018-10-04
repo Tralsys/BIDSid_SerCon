@@ -34,13 +34,24 @@ namespace BIDSid_SerCon
     private void EnterEv(object sender, RoutedEventArgs e)
     {
       if (Properties.Settings.Default.COMPortName != (string)COMPortListBox.SelectedItem ||
-      Properties.Settings.Default.BaudRateNum != BaudRateList[BaudRateListBox.SelectedIndex]) 
+      Properties.Settings.Default.BaudRateNum != BaudRateList[BaudRateListBox.SelectedIndex] ||
+      IsRTSEnable.IsChecked != Properties.Settings.Default.RTSSetting ||
+      IsDTREnable.IsChecked != Properties.Settings.Default.DTRSetting ||
+      IsDTRSettingDef.IsChecked != Properties.Settings.Default.IsDTRSettingDefault)
       {
         Properties.Settings.Default.COMPortName = (string)COMPortListBox.SelectedItem;
         Properties.Settings.Default.BaudRateNum = BaudRateList[BaudRateListBox.SelectedIndex];
+
+        Properties.Settings.Default.RTSSetting = (bool)IsRTSEnable.IsChecked;
+        Properties.Settings.Default.DTRSetting = (bool)IsDTREnable.IsChecked;
+        Properties.Settings.Default.IsDTRSettingDefault = (bool)IsDTRSettingDef.IsChecked;
+
         Properties.Settings.Default.Save();
         ID.IsSettingChanged = true;
       }
+
+
+
       id.Dispose();
       Close();
     }
@@ -62,7 +73,14 @@ namespace BIDSid_SerCon
       else SerialConnectEllipse.Fill = new SolidColorBrush(Colors.Red);
 
       List<string> PortList = new List<string>();
-      string[] pnl = SerialPort.GetPortNames();
+      string[] pnl = { string.Empty };
+      try
+      {
+        pnl = SerialPort.GetPortNames();
+      }catch(Exception ex)
+      {
+        MessageBox.Show(ex.Message, "BIDS SerCon");
+      }
       foreach (string pn in pnl)
       {
         PortList.Add(pn);
@@ -73,6 +91,10 @@ namespace BIDSid_SerCon
       if (PortList.Contains(lpn)) COMPortListBox.SelectedItem = lpn;
       else COMPortListBox.SelectedIndex = 0;
       BaudRateListBox.SelectedItem = Properties.Settings.Default.BaudRateNum;
+
+      IsRTSEnable.IsChecked = Properties.Settings.Default.RTSSetting;
+      IsDTREnable.IsChecked = Properties.Settings.Default.DTRSetting;
+      IsDTRSettingDef.IsChecked = Properties.Settings.Default.IsDTRSettingDefault;
     }
   }
 
@@ -91,7 +113,13 @@ namespace BIDSid_SerCon
         return ((BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData))).IsEnabled;
       }
     }
-    static public int BIDSppVersion { get; private set; } = 0;
+    static public int BIDSppVersion
+    {
+      get
+      {
+        return ((BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData))).VersionNum;
+      }
+    }
     public static bool IsSettingChanged = false;
 
     //static private MainWindow mw = new MainWindow();
@@ -101,7 +129,7 @@ namespace BIDSid_SerCon
       mw.Show();
     }
     private static bool Disposing = false;
-    private static bool Disposed = false;
+    //private static bool Disposed = false;
     Thread SerTh = new Thread(new ThreadStart(SerialDoing));
     public void Dispose()
     {
@@ -302,10 +330,10 @@ namespace BIDSid_SerCon
     static IntPtr hSharedMemory = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, size, SRAMName);
     static IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
     static BIDSSharedMemoryData BSMD = new BIDSSharedMemoryData();
-
+    //static ref BIDSSharedMemoryData bsmd= (BIDSSharedMemoryData)
     static int PanelMaxIndex = 255;
     static int SoundMaxIndex = 255;
-
+    /*
     /// <summary>
     /// 取得した配列とバージョン情報から、返信するべき配列を返す。
     /// </summary>
@@ -314,7 +342,7 @@ namespace BIDSid_SerCon
     /// <returns>送信する byte 配列</returns>
     private static byte[] GetAndWriteByte(byte[] GetArray,int Version)
     {
-      if (Version != 200) return ErrorCallArray;//現時点で対応してる構造バージョンは200のみ
+      //if (Version != 200) return ErrorCallArray;//現時点で対応してる構造バージョンは200のみ
       if (GetArray.Skip(30).Take(2) != new byte[2] { 0xFE, 0xFE }) return ErrorCallArray;
       byte[] ReturnArray = new byte[32];
       ReturnArray[0] = GetArray[0];
@@ -399,7 +427,7 @@ namespace BIDSid_SerCon
           return ErrorCallArray;
       }
     }
-
+    */
     static byte[] ErrorCallArray = new byte[32];
     static readonly int RetryNum = 32;
 
@@ -419,15 +447,14 @@ namespace BIDSid_SerCon
       ErrorCallArray = ECA;
       while (!Disposing)
       {
-        int ErrorCount = 0;
         using (SerialPort SP = new SerialPort(Properties.Settings.Default.COMPortName, Properties.Settings.Default.BaudRateNum))
         {
-          int VersionNum = 0;
-          bool IsStartHedGot = false;
-          SP.ReadBufferSize = 256;
-          SP.WriteBufferSize = 256;
           SP.ReadTimeout = 1000;
           SP.WriteTimeout = 1000;
+          //SP.RtsEnable = true;
+          SP.DtrEnable = Properties.Settings.Default.DTRSetting;
+          SP.RtsEnable = Properties.Settings.Default.RTSSetting;
+          SP.NewLine = "\r\n";
           //ポートオープン試行
           try
           {
@@ -441,52 +468,34 @@ namespace BIDSid_SerCon
               Disposing = true;
             }
           }
-          byte[] b = new byte[32];
-
           //バージョンチェックループ=>実装中止
 
           IsSerialConnected = true;
-          
+          if (!Properties.Settings.Default.IsDTRSettingDefault) SP.DtrEnable = !SP.DtrEnable;
+          //SP.DtrEnable = false;
           //対話式通信処理ループ
+          int TimeOutCount = 0;
           while (!IsSettingChanged && !Disposing && SP.IsOpen)
           {
-            b = new byte[32];
-            while (SP.BytesToRead < 32 && !IsSettingChanged && !Disposing && SP.IsOpen) Thread.Sleep(10);
-
             try
             {
-              SP.Read(b, 0, 32);
+              string wls = DataSelect(SP.ReadLine());
+              if (wls != string.Empty) SP.WriteLine(wls);
             }
             catch (TimeoutException)
             {
-              b = new byte[32];
-            }
-
-            //接尾辞が正常かどうか
-            if (b[30] == 0xFE && b[31] == 0xFE) 
-            {
-              SP.Write(GetAndWriteByte(b, VersionNum), 0, 32);//受信データを投げて、対応するデータを取得する。
-              /*if (Convert.ToInt16(b.Take(2).ToArray()) == 12)//Close Call=>実装中止
+              TimeOutCount++;
+              if (TimeOutCount > RetryNum)
               {
-                SP.Close();
-              }*/
-            }
-            else
-            {
-              SP.Write(ErrorCallArray, 0, 32);
-              ErrorCount++;
-              if (ErrorCount > RetryNum)
-              {
-                MessageBoxResult mbr = MessageBox.Show("対話式通信処理\n通信エラーが既定の回数以上発生しました。" + "\nエラー回数をリセットし、再接続を試行しますか？", "BIDS SerialConverter", MessageBoxButton.YesNo);
-                if (mbr == MessageBoxResult.No)
-                {
-                  Disposing = true;
-                }
-                else
-                {
-                  ErrorCount = 0;
-                }
+                MessageBox.Show("対話式通信処理\nタイムアウトが既定の回数以上発生しました。", "TimeOutError | BIDS SerCon(id)", MessageBoxButton.OK, MessageBoxImage.Error);
+                TimeOutCount = 0;
               }
+            }
+            catch (Exception e)
+            {
+              MessageBoxResult mbr = MessageBox.Show("対話式通信処理\n以下のエラーが発生しました。通信を終了しますか？\n" + e.Message,
+                "Error | BIDS SerCon(id)", MessageBoxButton.YesNo, MessageBoxImage.Error);
+              if (mbr == MessageBoxResult.Yes) SP.Close();
             }
           }
 
@@ -494,10 +503,6 @@ namespace BIDSid_SerCon
           
           if (SP.IsOpen)
           {
-            //b = new byte[32];
-            //b.SetValue(BitConverter.GetBytes((short)12), 0);//CloseCall
-            //b.SetValue(new byte[2] { 0xFE, 0xFE }, 30);//接尾辞
-            //SP.Write(b, 0, 32);
             SP.Close();
           }
           Thread.Sleep(50);
@@ -505,70 +510,149 @@ namespace BIDSid_SerCon
 
         IsSerialConnected = false;
       }
-      Disposed = true;
+      //Disposed = true;
 
     }
-  }
-}
-
-
-
-
-/*バージョンチェックループ
-while (VersionNum <= 0 && !IsSettingChanged && !Disposing && SP.IsOpen)
-{
-  b = new byte[32];
-  SP.Read(b, 0, 32);
-  if (Convert.ToInt16(b.Take(2).ToArray()) == 10 && b[30] == 0xFE && b[31] == 0xFE)  //Version Check
-  {
-    VersionNum = Convert.ToInt32(b.Skip(2).Take(4).ToArray());
-  }
-  else
-  {
-    SP.Write(ErrorCallArray, 0, 32);
-    ErrorCount++;
-    if (ErrorCount > RetryNum)
+    static int ConnectVersion = 0;
+    static readonly int ProgramVersion = 100;
+    static private string DataSelect(string GetString)
     {
-      MessageBoxResult mbr = MessageBox.Show("バージョン取得処理\n通信エラーが既定の回数以上発生しました。" + "\nエラー回数をリセットし、再接続を試行しますか？", "BIDS SerialConverter", MessageBoxButton.YesNo);
-      if (mbr == MessageBoxResult.No)
+      string ReturnString = string.Empty;
+      if (GetString.Length < 4) return string.Empty;
+      if (GetString.Take(2).ToString() != "TR") return string.Empty;
+      if (GetString.Skip(2).Take(1).ToString() == "V")//バージョン
       {
-        Disposing = true;
+        int serv = 0;
+        try
+        {
+          serv = Convert.ToInt32(GetString.Skip(3).ToString());
+        }
+        catch (FormatException)
+        {
+          return "TRE6";//要求情報コード 文字混入
+        }
+        catch (OverflowException)
+        {
+          return "TRE5";//要求情報コード 変換オーバーフロー
+        }
+        if (serv < ProgramVersion)//Serialのが古い
+        {
+          ConnectVersion = serv;
+        }
+        else//PIと同じか、PIのが古い
+        {
+          ConnectVersion = ProgramVersion;
+        }
+        return GetString + "X" + ProgramVersion.ToString();
       }
-      else
+      ReturnString = GetString + "X";
+      switch (GetString.Skip(2).Take(1).ToString())
       {
-        ErrorCount = 0;
+        case "R"://レバーサー
+          switch (GetString.Skip(3).ToString())
+          {
+            case "R":
+              break;
+            case "N":
+              break;
+            case "F":
+              break;
+            case "-1":
+              break;
+            case "0":
+              break;
+            case "1":
+              break;
+            default:
+              return "TRE7";//要求情報コードが不正
+          }
+          return ReturnString + "0";
+        case "S":
+          int sers = 0;
+          try
+          {
+            sers = Convert.ToInt32(GetString.Skip(3).ToString());
+          }
+          catch (FormatException)
+          {
+            return "TRE6";//要求情報コード 文字混入
+          }
+          catch (OverflowException)
+          {
+            return "TRE5";//要求情報コード 変換オーバーフロー
+          }
+
+          return ReturnString;
+        case "P":
+          int serp = 0;
+          try
+          {
+            serp = Convert.ToInt32(GetString.Skip(3).ToString());
+          }
+          catch (FormatException)
+          {
+            return "TRE6";//要求情報コード 文字混入
+          }
+          catch (OverflowException)
+          {
+            return "TRE5";//要求情報コード 変換オーバーフロー
+          }
+          return ReturnString;
+        case "B":
+          int serb = 0;
+          try
+          {
+            serb = Convert.ToInt32(GetString.Skip(3).ToString());
+          }
+          catch (FormatException)
+          {
+            return "TRE6";//要求情報コード 文字混入
+          }
+          catch (OverflowException)
+          {
+            return "TRE5";//要求情報コード 変換オーバーフロー
+          }
+          return ReturnString;
+        case "K":
+          int serk = 0;
+          try
+          {
+            serk = Convert.ToInt32(GetString.Skip(4).ToString());
+          }
+          catch (FormatException)
+          {
+            return "TRE6";//要求情報コード 文字混入
+          }
+          catch (OverflowException)
+          {
+            return "TRE5";//要求情報コード 変換オーバーフロー
+          }
+          return ReturnString;
+        case "I":
+          int seri = 0;
+          try
+          {
+            seri = Convert.ToInt32(GetString.Skip(4).ToString());
+          }
+          catch (FormatException)
+          {
+            return "TRE6";//要求情報コード 文字混入
+          }
+          catch (OverflowException)
+          {
+            return "TRE5";//要求情報コード 変換オーバーフロー
+          }
+          return ReturnString;
+        default:
+          return "TRE4";//識別子不正
       }
     }
-  }
-}
-ErrorCount = 0;
-//起動確認ループ
-while (!IsStartHedGot && !IsSettingChanged && !Disposing && SP.IsOpen)
-{
-  b = new byte[32];
-  SP.Read(b, 0, 32);
-  if (Convert.ToInt16(b.Take(2).ToArray()) == 11 && b.Skip(30).ToArray() == new byte[2] { 0xFE, 0xFE }) //Start Check
-  {
-    IsStartHedGot = true;
-  }
-  else
-  {
-    SP.Write(ErrorCallArray, 0, 32);
-    ErrorCount++;
-    if (ErrorCount > RetryNum)
+    static private string InfoConv(int Num)
     {
-      MessageBoxResult mbr = MessageBox.Show("通信同期処理\n通信エラーが既定の回数以上発生しました。" + "\nエラー回数をリセットし、再接続を試行しますか？", "BIDS SerialConverter", MessageBoxButton.YesNo);
-      if (mbr == MessageBoxResult.No)
-      {
-        Disposing = true;
-      }
-      else
-      {
-        ErrorCount = 0;
-      }
+
+      return "";
     }
   }
 }
-ErrorCount = 0;
-*/
+
 

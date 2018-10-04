@@ -11,7 +11,7 @@ using System.Windows;
 [assembly: AssemblyDescription("BIDSpp.dllとともに用いて、ArduinoなどにBVEの運転情報を送信する")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Tech Otter")]
-[assembly: AssemblyProduct("BIDS")]
+[assembly: AssemblyProduct("BIDS シリアルコンバーター")]
 [assembly: AssemblyCopyright("Copyright © Tetsu Otter 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

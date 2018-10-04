@@ -8,5 +8,14 @@
     <Setting Name="BaudRateNum" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">9600</Value>
     </Setting>
+    <Setting Name="DTRSetting" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="RTSSetting" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="IsDTRSettingDefault" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

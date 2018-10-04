@@ -46,5 +46,41 @@ namespace BIDSid_SerCon.Properties {
                 this["BaudRateNum"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DTRSetting {
+            get {
+                return ((bool)(this["DTRSetting"]));
+            }
+            set {
+                this["DTRSetting"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RTSSetting {
+            get {
+                return ((bool)(this["RTSSetting"]));
+            }
+            set {
+                this["RTSSetting"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsDTRSettingDefault {
+            get {
+                return ((bool)(this["IsDTRSettingDefault"]));
+            }
+            set {
+                this["IsDTRSettingDefault"] = value;
+            }
+        }
     }
 }

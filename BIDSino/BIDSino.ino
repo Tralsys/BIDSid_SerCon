@@ -8,6 +8,7 @@ void setup() {
   }
   delay(30 * 10 ^ 3);
   bs.End();
+  String s = u8"";
 }
 
 void loop() {

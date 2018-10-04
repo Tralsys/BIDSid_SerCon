@@ -12,7 +12,7 @@ class BIDS {
     BIDS(int BaudRate);//BaudRateを指定して初期化
     void Begin();//シリアル通信を始める
     void End();
-    void GetData(short Header, byte DataArray[32]);//Byte配列でデータを受信する
+    void GetData(byte Header, byte DataArray[32]);//Byte配列でデータを受信する
 
     short Panel[256];
     short Sound[256];
