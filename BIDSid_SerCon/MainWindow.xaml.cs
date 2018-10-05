@@ -99,8 +99,8 @@ namespace BIDSid_SerCon
     }
   }
 
-  //public class ID : IInputDevice
-  public class ID
+  public class ID : IInputDevice
+  //public class ID
   {
     public event InputEventHandler LeverMoved;
     public event InputEventHandler KeyDown;
@@ -197,7 +197,7 @@ namespace BIDSid_SerCon
     {
       if (BVEWindow == IntPtr.Zero)
       {
-        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bvets5");
+        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
       }
       if (BVEWindow == IntPtr.Zero) return false;
       PostMessage(BVEWindow, 0x0100, (IntPtr)num, (IntPtr)0);
@@ -207,7 +207,7 @@ namespace BIDSid_SerCon
     {
       if (BVEWindow == IntPtr.Zero)
       {
-        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bvets5");
+        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
       }
       if (BVEWindow == IntPtr.Zero) return false;
       PostMessage(BVEWindow, 0x0101, (IntPtr)num, (IntPtr)0);
@@ -241,7 +241,7 @@ namespace BIDSid_SerCon
 
     public void Load(string settingsPath)
     {
-      BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bvets5");
+      BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
       Properties.Settings.Default.Upgrade();
       SerTh.Name = "Serial Loop";
       
@@ -251,7 +251,7 @@ namespace BIDSid_SerCon
 
     public void Tick()
     {
-      BSMD = (BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData));
+      //BSMD = (BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData));
     }
 
     public void SetAxisRanges(int[][] ranges)
@@ -520,7 +520,6 @@ namespace BIDSid_SerCon
       }
     }
     */
-    static byte[] ErrorCallArray = new byte[32];
     static readonly int RetryNum = 32;
 
     /// <summary>
@@ -530,13 +529,6 @@ namespace BIDSid_SerCon
     {
       Disposing = false;
       IsSerialConnected = false;
-      byte[] ECA = new byte[32];
-      Array.Copy(BitConverter.GetBytes((short)13), ECA, 2);
-      //ECA.SetValue(BitConverter.GetBytes((short)13), 0);//Error Callのヘッダー
-      //ECA.SetValue(new byte[2] { 0xFE, 0xFE }, 30);//接尾辞
-      ECA[30] = 0xFE;
-      ECA[31] = 0xFE;
-      ErrorCallArray = ECA;
       while (!Disposing)
       {
         using (SerialPort SP = new SerialPort(Properties.Settings.Default.COMPortName, Properties.Settings.Default.BaudRateNum))
@@ -547,6 +539,7 @@ namespace BIDSid_SerCon
           SP.DtrEnable = Properties.Settings.Default.DTRSetting;
           SP.RtsEnable = Properties.Settings.Default.RTSSetting;
           SP.NewLine = "\r\n";
+          SP.Encoding = System.Text.Encoding.ASCII;
           //ポートオープン試行
           try
           {
