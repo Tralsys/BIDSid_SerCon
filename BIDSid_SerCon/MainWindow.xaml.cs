@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media;
+using Mackoy.Bvets;
 //using Mackoy.Bvets;
 namespace BIDSid_SerCon
 {
@@ -101,9 +102,9 @@ namespace BIDSid_SerCon
   //public class ID : IInputDevice
   public class ID
   {
-    //public event Mackoy.Bvets.InputEventHandler LeverMoved;
-    //public event Mackoy.Bvets.InputEventHandler KeyDown;
-    //public event Mackoy.Bvets.InputEventHandler KeyUp;
+    public event InputEventHandler LeverMoved;
+    public event InputEventHandler KeyDown;
+    public event InputEventHandler KeyUp;
 
     static public bool IsSerialConnected { get; private set; } = false;
     static public bool IsBIDSppConnected
@@ -120,8 +121,98 @@ namespace BIDSid_SerCon
         return ((BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData))).VersionNum;
       }
     }
+
+
     public static bool IsSettingChanged = false;
 
+    private int ReverserNum
+    {
+      set => LeverMoved(this, new InputEventArgs(0, value));
+    }
+    private int PowerNotchNum
+    {
+      set => LeverMoved(this, new InputEventArgs(1, value));
+    }
+    private int BrakeNotchNum
+    {
+      set => LeverMoved(this, new InputEventArgs(2, value));
+    }
+    private int SHandleNum
+    {
+      set => LeverMoved(this, new InputEventArgs(3, value));
+    }
+    private int BtDown
+    {
+      set
+      {
+        if (value < 4)
+        {
+          KeyDown(this, new InputEventArgs(-1, value));
+        }
+        else
+        {
+          KeyDown(this, new InputEventArgs(-2, value - 4));
+        }
+      }
+    }
+    private int BtUp
+    {
+      set
+      {
+        if (value < 4)
+        {
+          KeyUp(this, new InputEventArgs(-1, value));
+        }
+        else
+        {
+          KeyUp(this, new InputEventArgs(-2, value - 4));
+        }
+      }
+    }
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetDesktopWindow();
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="hwndParent">親ウィンドウのハンドル</param>
+    /// <param name="hwndChildAfter">子ウィンドウのハンドル</param>
+    /// <param name="lpszClass">クラス名</param>
+    /// <param name="lpszWindow">ウィンドウ名</param>
+    /// <returns></returns>
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+    /// <summary>
+    /// 指定されたウィンドウを作成したスレッドに関連付けられているメッセージキューに、1 つのメッセージをポスト
+    /// </summary>
+    /// <param name="hWnd">ポスト先ウィンドウのハンドル</param>
+    /// <param name="Msg">メッセージ</param>
+    /// <param name="wParam">メッセージの最初のパラメータ</param>
+    /// <param name="lParam">メッセージの 2 番目のパラメータ</param>
+    /// <returns></returns>
+    [DllImport("user32.dll")]
+    public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    IntPtr BVEWindow = (IntPtr)0;
+    private bool KyDown(int num)
+    {
+      if (BVEWindow == IntPtr.Zero)
+      {
+        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bvets5");
+      }
+      if (BVEWindow == IntPtr.Zero) return false;
+      PostMessage(BVEWindow, 0x0100, (IntPtr)num, (IntPtr)0);
+      return true;
+    }
+    private bool KyUp(int num)
+    {
+      if (BVEWindow == IntPtr.Zero)
+      {
+        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bvets5");
+      }
+      if (BVEWindow == IntPtr.Zero) return false;
+      PostMessage(BVEWindow, 0x0101, (IntPtr)num, (IntPtr)0);
+      return true;
+    }
     //static private MainWindow mw = new MainWindow();
     public void Configure(System.Windows.Forms.IWin32Window owner)
     {
@@ -150,6 +241,7 @@ namespace BIDSid_SerCon
 
     public void Load(string settingsPath)
     {
+      BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bvets5");
       Properties.Settings.Default.Upgrade();
       SerTh.Name = "Serial Loop";
       
@@ -209,7 +301,7 @@ namespace BIDSid_SerCon
       /// <summary>
       /// 列車位置[m]
       /// </summary>
-      public double X;
+      public double Z;
       /// <summary>
       /// 列車速度[km/h]
       /// </summary>
@@ -546,28 +638,36 @@ namespace BIDSid_SerCon
         return GetString + "X" + ProgramVersion.ToString();
       }
       ReturnString = GetString + "X";
+
+      ID iD = new ID();
       switch (GetString.Skip(2).Take(1).ToString())
       {
         case "R"://レバーサー
           switch (GetString.Skip(3).ToString())
           {
             case "R":
+              iD.ReverserNum = -1;
               break;
             case "N":
+              iD.ReverserNum = 0;
               break;
             case "F":
+              iD.ReverserNum = 1;
               break;
             case "-1":
+              iD.ReverserNum = -1;
               break;
             case "0":
+              iD.ReverserNum = 0;
               break;
             case "1":
+              iD.ReverserNum = 1;
               break;
             default:
               return "TRE7";//要求情報コードが不正
           }
           return ReturnString + "0";
-        case "S":
+        case "S"://ワンハンドル
           int sers = 0;
           try
           {
@@ -581,9 +681,9 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-
-          return ReturnString;
-        case "P":
+          iD.SHandleNum = sers;
+          return ReturnString + "0";
+        case "P"://Pノッチ操作
           int serp = 0;
           try
           {
@@ -597,8 +697,9 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          return ReturnString;
-        case "B":
+          iD.PowerNotchNum = serp;
+          return ReturnString + "0";
+        case "B"://Bノッチ操作
           int serb = 0;
           try
           {
@@ -612,8 +713,9 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          return ReturnString;
-        case "K":
+          iD.BrakeNotchNum = serb;
+          return ReturnString + "0";
+        case "K"://キー操作
           int serk = 0;
           try
           {
@@ -627,8 +729,41 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          return ReturnString;
-        case "I":
+          switch (GetString.Skip(3).Take(1).ToString())
+          {
+            //udpr
+            case "U":
+              if (iD.KyUp(serk)) return ReturnString + "0";
+              else return "TRE8";
+            case "D":
+              if (iD.KyDown(serk)) return ReturnString + "0";
+              else return "TRE8";
+            case "P":
+              if (serk < 20)
+              {
+                iD.BtDown = serk;
+                return ReturnString + "0";
+              }
+              else
+              {
+                return "TRE2";
+              }
+            case "R":
+              if (serk < 20)
+              {
+                iD.BtUp = serk;
+                return ReturnString + "0";
+              }
+              else
+              {
+                return "TRE2";
+              }
+            default:
+              return "TRE3";//記号部不正
+          }
+        case "I"://情報取得
+          BSMD = (BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData));
+          if (!BSMD.IsEnabled) return "TRE1";
           int seri = 0;
           try
           {
@@ -642,15 +777,65 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          return ReturnString;
+          switch (GetString.Skip(3).Take(1).ToString())
+          {
+            case "C":
+              switch (seri)
+              {
+                case 0:
+                  return ReturnString + BSMD.SpecData.B.ToString();
+                case 1:
+                  return ReturnString + BSMD.SpecData.P.ToString();
+                case 2:
+                  return ReturnString + BSMD.SpecData.A.ToString();
+                case 3:
+                  return ReturnString + BSMD.SpecData.J.ToString();
+                case 4:
+                  return ReturnString + BSMD.SpecData.C.ToString();
+                default: return "TRE2";
+              }
+            case "E":
+              switch (seri)
+              {
+                case 0: return ReturnString + BSMD.StateData.Z;
+                case 1: return ReturnString + BSMD.StateData.V;
+                case 2: return ReturnString + BSMD.StateData.T;
+                case 3: return ReturnString + BSMD.StateData.BC;
+                case 4: return ReturnString + BSMD.StateData.MR;
+                case 5: return ReturnString + BSMD.StateData.ER;
+                case 6: return ReturnString + BSMD.StateData.BP;
+                case 7: return ReturnString + BSMD.StateData.SAP;
+                case 8: return ReturnString + BSMD.StateData.I;
+                //case 9: return ReturnString + BSMD.StateData.Volt;//予約 電圧
+                case 10: return ReturnString + TimeSpan.FromMilliseconds(BSMD.StateData.T).Hours.ToString();
+                case 11: return ReturnString + TimeSpan.FromMilliseconds(BSMD.StateData.T).Minutes.ToString();
+                case 12: return ReturnString + TimeSpan.FromMilliseconds(BSMD.StateData.T).Seconds.ToString();
+                case 13: return ReturnString + TimeSpan.FromMilliseconds(BSMD.StateData.T).Milliseconds.ToString();
+                default: return "TRE2";
+              }
+            case "H":
+              switch (seri)
+              {
+                case 0: return ReturnString + BSMD.HandleData.B;
+                case 1: return ReturnString + BSMD.HandleData.P;
+                case 2: return ReturnString + BSMD.HandleData.R;
+                //定速状態は予約
+                default: return "TRE2";
+              }
+            case "P":
+              if (seri > 255 || seri < 0) return "TRE2";
+              return ReturnString + BSMD.Panel[seri];
+            case "S":
+              if (seri > 255 || seri < 0) return "TRE2";
+              return ReturnString + BSMD.Sound[seri];
+            case "D":
+              if (BSMD.IsDoorClosed) return ReturnString + "0";
+              else return ReturnString + "1";
+            default: return "TRE3";//記号部不正
+          }
         default:
           return "TRE4";//識別子不正
       }
-    }
-    static private string InfoConv(int Num)
-    {
-
-      return "";
     }
   }
 }

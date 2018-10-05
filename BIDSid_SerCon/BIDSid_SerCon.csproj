@@ -38,6 +38,10 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Mackoy.IInputDevice">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\mackoy\BveTs5\Mackoy.IInputDevice.DLL</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
