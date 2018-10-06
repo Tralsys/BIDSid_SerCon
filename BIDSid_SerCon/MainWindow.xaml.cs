@@ -15,6 +15,39 @@ namespace BIDSid_SerCon
   /// </summary>
   public partial class MainWindow : Window
   {
+    //ID id = new ID();
+
+    private static readonly string SRAMName = "BIDSSharedMem";
+    //SECTION_ALL_ACCESS=983071
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern IntPtr CreateFileMapping(UIntPtr hFile, IntPtr lpAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, uint dwNumberOfBytesToMap);
+    //[DllImport("kernel32.dll")]
+    //static extern void CopyMemory(IntPtr Destination, IntPtr Source, uint Length);//予約
+    [DllImport("kernel32.dll")]
+    static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
+    [DllImport("kernel32.dll")]
+    static extern bool CloseHandle(IntPtr hObject);
+    static private readonly uint size = (uint)Marshal.SizeOf(typeof(ID.BIDSSharedMemoryData));
+    static IntPtr hSharedMemory = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, size, SRAMName);
+    static IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
+    static public bool IsBIDSppConnected
+    {
+      get
+      {
+        return ((ID.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(ID.BIDSSharedMemoryData))).IsEnabled;
+      }
+    }
+    static public int BIDSppVersion
+    {
+      get
+      {
+        return ((ID.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(ID.BIDSSharedMemoryData))).VersionNum;
+      }
+    }
+
+
     public MainWindow()
     {
       InitializeComponent();
@@ -22,13 +55,14 @@ namespace BIDSid_SerCon
 
     private void CancelEv(object sender, RoutedEventArgs e)
     {
-      id.Dispose();
+      //id.Dispose();
+      UnmapViewOfFile(pMemory);
+      CloseHandle(hSharedMemory);
       Close();
     }
-    ID id = new ID();
     private void OnLoad(object sender, RoutedEventArgs e)
     {
-      id.Load(string.Empty);
+      //id.Load(string.Empty);
       ReLoad(null, null);
     }
     private readonly List<int> BaudRateList = new List<int>() { 4800, 9600, 19200, 38400, 57600, 115200 };
@@ -53,17 +87,17 @@ namespace BIDSid_SerCon
 
 
 
-      id.Dispose();
+      //id.Dispose();
       Close();
     }
 
     private void ReLoad(object sender, RoutedEventArgs e)
     {
       //接続状況表示更新
-      if (ID.IsBIDSppConnected && ID.BIDSppVersion > 0)
+      if (IsBIDSppConnected && BIDSppVersion > 0)
       {
         BIDSppConnectEllipse.Fill = new SolidColorBrush(Colors.LightGreen);
-        BIDSppVerLab.Content = ID.BIDSppVersion.ToString();
+        BIDSppVerLab.Content = BIDSppVersion.ToString();
       }
       else
       {
@@ -107,20 +141,6 @@ namespace BIDSid_SerCon
     public event InputEventHandler KeyUp;
 
     static public bool IsSerialConnected { get; private set; } = false;
-    static public bool IsBIDSppConnected
-    {
-      get
-      {
-        return ((BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData))).IsEnabled;
-      }
-    }
-    static public int BIDSppVersion
-    {
-      get
-      {
-        return ((BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData))).VersionNum;
-      }
-    }
 
 
     public static bool IsSettingChanged = false;
@@ -221,10 +241,11 @@ namespace BIDSid_SerCon
     }
     private static bool Disposing = false;
     //private static bool Disposed = false;
-    Thread SerTh = new Thread(new ThreadStart(SerialDoing));
+    //Thread SerTh = new Thread(new ThreadStart(SerialDoing));
     public void Dispose()
     {
       Disposing = true;
+      SerialDispose();
       UnmapViewOfFile(pMemory);
       CloseHandle(hSharedMemory);
       Properties.Settings.Default.Save();
@@ -243,15 +264,17 @@ namespace BIDSid_SerCon
     {
       BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
       Properties.Settings.Default.Upgrade();
-      SerTh.Name = "Serial Loop";
+      SerialLoad();
+      //SerTh.Name = "Serial Loop";
       
-      SerTh.Start();
+      //SerTh.Start();
     }
 
 
     public void Tick()
     {
-      //BSMD = (BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(BIDSSharedMemoryData));
+      if (IsSettingChanged) SerialDispose();
+      SerialTick();
     }
 
     public void SetAxisRanges(int[][] ranges)
@@ -423,8 +446,8 @@ namespace BIDSid_SerCon
     static IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
     static BIDSSharedMemoryData BSMD = new BIDSSharedMemoryData();
     //static ref BIDSSharedMemoryData bsmd= (BIDSSharedMemoryData)
-    static int PanelMaxIndex = 255;
-    static int SoundMaxIndex = 255;
+    //static int PanelMaxIndex = 255;
+    //static int SoundMaxIndex = 255;
     /*
     /// <summary>
     /// 取得した配列とバージョン情報から、返信するべき配列を返す。
@@ -520,8 +543,136 @@ namespace BIDSid_SerCon
       }
     }
     */
-    static readonly int RetryNum = 32;
+    //static readonly int RetryNum = 32;
 
+    SerialPort Se = null;
+    private void SerialLoad()
+    {
+      Se = new SerialPort(Properties.Settings.Default.COMPortName, Properties.Settings.Default.BaudRateNum);
+      Se.ReadTimeout = 1000;
+      Se.WriteTimeout = 1000;
+      Se.DtrEnable = Properties.Settings.Default.DTRSetting;
+      Se.RtsEnable = Properties.Settings.Default.RTSSetting;
+      Se.NewLine = "\n";
+      try
+      {
+        Se.Open();
+      }catch(Exception e)
+      {
+        if(MessageBox.Show("ポートオープン処理エラー\n" + e.Message+"\n再試行しますか？", "BIDS SerCon", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
+        {
+          SerialLoad();
+        }
+      }
+      if (Se.IsOpen) IsSerialConnected = true;
+      else
+      {
+        Se = null;
+        IsSerialConnected = false;
+      }
+    }
+    string LastCom = string.Empty;
+    private void SerialTick()
+    {
+      if (Se == null) return;
+      if (Se.IsOpen == false) return;
+      if (Se.BytesToRead <= 0) return;
+      string GetStr = string.Empty;
+      try
+      {
+        GetStr = Se.ReadExisting();
+      }catch(Exception e)
+      {
+        if (MessageBox.Show("SerialReadエラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
+          MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
+        {
+          SerialDispose();
+        }
+      }
+      if (GetStr.Length <= 0) return;
+      try
+      {
+        if (!GetStr.Contains("\n")) { LastCom += GetStr; return; }
+        string[] GetCom = (LastCom + GetStr).Split('\n');
+        if (GetCom.Length == 1)
+        {
+          string ReturnData = DataSelect(GetCom[0]);
+          try
+          {
+            if (ReturnData != string.Empty) Se.WriteLine(ReturnData);
+          }
+          catch (Exception e)
+          {
+            if (MessageBox.Show("情報送信エラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
+              MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
+            {
+              SerialDispose();
+              return;
+            }
+          }
+        }
+        else
+        {
+          for (int i = 0; i < GetCom.Length - 1; i++)
+          {
+            string returnData = DataSelect(GetCom[i]);
+            try
+            {
+              if (returnData != string.Empty) Se.WriteLine(returnData);
+            }
+            catch (Exception e)
+            {
+              if (MessageBox.Show("情報送信エラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
+                MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
+              {
+                SerialDispose();
+              }
+            }
+          }
+          LastCom = GetCom[GetCom.Length - 1];
+        }
+      }
+      catch(Exception e)
+      {
+        if (MessageBox.Show("情報処理エラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
+          MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
+        {
+          SerialDispose();
+        }
+      }
+    }
+    private void SerialDispose()
+    {
+      if (Se != null)
+      {
+        if (Se.IsOpen)
+        {
+          try
+          {
+            Se.Close();
+          }catch(Exception e)
+          {
+            MessageBox.Show("ポートクローズ処理エラー\n" + e.Message, "BIDS SerCon");
+          }
+        }
+        try
+        {
+          Se.Dispose();
+        }catch(Exception e)
+        {
+          MessageBox.Show("ポート解放処理エラー\n" + e.Message, "BIDS SerCon");
+        }
+      }
+      IsSerialConnected = false;
+      Se = null;
+      if (!Disposing && IsSettingChanged)
+      {
+        SerialLoad();
+        IsSettingChanged = false;
+      }
+    }
+
+    /*
     /// <summary>
     /// シリアル通信を実行する関数
     /// </summary>
@@ -531,6 +682,8 @@ namespace BIDSid_SerCon
       IsSerialConnected = false;
       while (!Disposing)
       {
+        bool RetryDeny = false;
+        IsSettingChanged = false;
         using (SerialPort SP = new SerialPort(Properties.Settings.Default.COMPortName, Properties.Settings.Default.BaudRateNum))
         {
           SP.ReadTimeout = 1000;
@@ -538,8 +691,8 @@ namespace BIDSid_SerCon
           //SP.RtsEnable = true;
           SP.DtrEnable = Properties.Settings.Default.DTRSetting;
           SP.RtsEnable = Properties.Settings.Default.RTSSetting;
-          SP.NewLine = "\r\n";
-          SP.Encoding = System.Text.Encoding.ASCII;
+          SP.NewLine = "\n";
+          //SP.Encoding = System.Text.Encoding.ASCII;
           //ポートオープン試行
           try
           {
@@ -550,7 +703,8 @@ namespace BIDSid_SerCon
             MessageBoxResult mbr = MessageBox.Show(e.Message+"\n再接続を試行しますか？", "BIDS SerialConverter", MessageBoxButton.YesNo);
             if (mbr == MessageBoxResult.No)
             {
-              Disposing = true;
+              RetryDeny = true;
+              if(SP.IsOpen) SP.Close();
             }
           }
           //バージョンチェックループ=>実装中止
@@ -564,8 +718,18 @@ namespace BIDSid_SerCon
           {
             try
             {
-              string wls = DataSelect(SP.ReadLine());
-              if (wls != string.Empty) SP.WriteLine(wls);
+              bool CommandEnd = false;
+              string GetStr = string.Empty;
+              while (!CommandEnd)
+              {
+                char[] GetChar = new char[1];
+                SP.Read(GetChar, 0, 1);
+                if (GetChar[0] != '\r' && GetChar[0] != '\n') GetStr += GetChar[0].ToString();
+                else if (GetChar[0] == '\n') CommandEnd = true;
+              }
+              //string wls = DataSelect(SP.ReadLine());
+              //string wls = DataSelect(GetStr);
+              //if (wls != string.Empty) SP.WriteLine(wls);
             }
             catch (TimeoutException)
             {
@@ -590,71 +754,76 @@ namespace BIDSid_SerCon
           {
             SP.Close();
           }
-          Thread.Sleep(50);
         }
-
         IsSerialConnected = false;
+        Thread.Sleep(50);
+        if (RetryDeny) while (!IsSettingChanged || !Disposing) Thread.Sleep(100);
+        RetryDeny = false;
       }
       //Disposed = true;
 
     }
+    */
     static int ConnectVersion = 0;
     static readonly int ProgramVersion = 100;
-    static private string DataSelect(string GetString)
+    private string DataSelect(string GetString)
     {
       string ReturnString = string.Empty;
+      GetString = GetString.Replace("\n", string.Empty);
+      GetString = GetString.Replace("\r", string.Empty);
       if (GetString.Length < 4) return string.Empty;
-      if (GetString.Take(2).ToString() != "TR") return string.Empty;
-      if (GetString.Skip(2).Take(1).ToString() == "V")//バージョン
-      {
-        int serv = 0;
-        try
-        {
-          serv = Convert.ToInt32(GetString.Skip(3).ToString());
-        }
-        catch (FormatException)
-        {
-          return "TRE6";//要求情報コード 文字混入
-        }
-        catch (OverflowException)
-        {
-          return "TRE5";//要求情報コード 変換オーバーフロー
-        }
-        if (serv < ProgramVersion)//Serialのが古い
-        {
-          ConnectVersion = serv;
-        }
-        else//PIと同じか、PIのが古い
-        {
-          ConnectVersion = ProgramVersion;
-        }
-        return GetString + "X" + ProgramVersion.ToString();
-      }
+      if (GetString.Substring(0, 2) != "TR") return string.Empty;
       ReturnString = GetString + "X";
-
-      ID iD = new ID();
-      switch (GetString.Skip(2).Take(1).ToString())
+      //MessageBox.Show(GetString);
+      //ID iD = new ID();
+      //0 1 2 3
+      //T R X X
+      switch (GetString.Substring(2, 1))
       {
+        case "V":
+          int serv = 0;
+          try
+          {
+            serv = Convert.ToInt32(GetString.Substring(3));
+          }
+          catch (FormatException)
+          {
+            return "TRE6";//要求情報コード 文字混入
+          }
+          catch (OverflowException)
+          {
+            return "TRE5";//要求情報コード 変換オーバーフロー
+          }
+          if (serv < ProgramVersion)//Serialのが古い
+          {
+            ConnectVersion = serv;
+          }
+          else//PIと同じか、PIのが古い
+          {
+            ConnectVersion = ProgramVersion;
+          }
+          return GetString + "X" + ProgramVersion.ToString();
+
         case "R"://レバーサー
-          switch (GetString.Skip(3).ToString())
+          switch (GetString.Substring(3))
           {
             case "R":
-              iD.ReverserNum = -1;
+              ReverserNum = -1;
               break;
             case "N":
-              iD.ReverserNum = 0;
+              ReverserNum = 0;
               break;
             case "F":
-              iD.ReverserNum = 1;
+              ReverserNum = 1;
               break;
             case "-1":
-              iD.ReverserNum = -1;
+              ReverserNum = -1;
               break;
             case "0":
-              iD.ReverserNum = 0;
+              ReverserNum = 0;
               break;
             case "1":
-              iD.ReverserNum = 1;
+              ReverserNum = 1;
               break;
             default:
               return "TRE7";//要求情報コードが不正
@@ -664,7 +833,7 @@ namespace BIDSid_SerCon
           int sers = 0;
           try
           {
-            sers = Convert.ToInt32(GetString.Skip(3).ToString());
+            sers = Convert.ToInt32(GetString.Substring(3));
           }
           catch (FormatException)
           {
@@ -674,13 +843,13 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          iD.SHandleNum = sers;
+          SHandleNum = sers;
           return ReturnString + "0";
         case "P"://Pノッチ操作
           int serp = 0;
           try
           {
-            serp = Convert.ToInt32(GetString.Skip(3).ToString());
+            serp = Convert.ToInt32(GetString.Substring(3));
           }
           catch (FormatException)
           {
@@ -690,13 +859,13 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          iD.PowerNotchNum = serp;
+          PowerNotchNum = serp;
           return ReturnString + "0";
         case "B"://Bノッチ操作
           int serb = 0;
           try
           {
-            serb = Convert.ToInt32(GetString.Skip(3).ToString());
+            serb = Convert.ToInt32(GetString.Substring(3));
           }
           catch (FormatException)
           {
@@ -706,13 +875,13 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          iD.BrakeNotchNum = serb;
+          BrakeNotchNum = serb;
           return ReturnString + "0";
         case "K"://キー操作
           int serk = 0;
           try
           {
-            serk = Convert.ToInt32(GetString.Skip(4).ToString());
+            serk = Convert.ToInt32(GetString.Substring(4));
           }
           catch (FormatException)
           {
@@ -722,19 +891,19 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          switch (GetString.Skip(3).Take(1).ToString())
+          switch (GetString.Substring(3,1))
           {
             //udpr
             case "U":
-              if (iD.KyUp(serk)) return ReturnString + "0";
+              if (KyUp(serk)) return ReturnString + "0";
               else return "TRE8";
             case "D":
-              if (iD.KyDown(serk)) return ReturnString + "0";
+              if (KyDown(serk)) return ReturnString + "0";
               else return "TRE8";
             case "P":
               if (serk < 20)
               {
-                iD.BtDown = serk;
+                BtDown = serk;
                 return ReturnString + "0";
               }
               else
@@ -744,7 +913,7 @@ namespace BIDSid_SerCon
             case "R":
               if (serk < 20)
               {
-                iD.BtUp = serk;
+                BtUp = serk;
                 return ReturnString + "0";
               }
               else
@@ -760,7 +929,7 @@ namespace BIDSid_SerCon
           int seri = 0;
           try
           {
-            seri = Convert.ToInt32(GetString.Skip(4).ToString());
+            seri = Convert.ToInt32(GetString.Substring(4));
           }
           catch (FormatException)
           {
@@ -770,7 +939,7 @@ namespace BIDSid_SerCon
           {
             return "TRE5";//要求情報コード 変換オーバーフロー
           }
-          switch (GetString.Skip(3).Take(1).ToString())
+          switch (GetString.Substring(3,1))
           {
             case "C":
               switch (seri)
