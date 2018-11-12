@@ -1,0 +1,79 @@
+﻿<Window x:Class="BIDSid_SerCon.GIPIBtnSetting"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BIDSid_SerCon"
+        mc:Ignorable="d"
+        Title="GIPI Button Assign Setting"
+        Loaded="OnLoad"
+        Height="300pt"
+        Width="450pt">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="30pt"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="30pt"/>
+    </Grid.RowDefinitions>
+    <Grid Grid.Row="0" Background="LightGray">
+      <TextBlock FontSize="15pt"
+             Margin="3pt"
+             Padding="0"
+           HorizontalAlignment="Left"
+           VerticalAlignment="Top">
+        <Run Text="GIPI互換機能 : Button Assign設定" FontSize="15pt"/>
+        <Run Text="(TOKから始まるコマンドに適用されます)" FontSize="12pt"/>
+      </TextBlock>
+    </Grid>
+    <Grid Grid.Row="1" Name="BtnGrid">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="0.4*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="0.4*"/>
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+    </Grid>
+    <Grid Grid.Row="2" Background="LightGray">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="2*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="2*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="2*"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="2*"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Button Click="Reset"
+              Content="Reset"
+              Grid.Column="1"
+              Margin="3pt"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
+      <Button Click="CancelEv"
+              IsCancel="True"
+              Content="Cancel"
+              Grid.Column="5"
+              Margin="3pt"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
+      <Button Click="EnterEv"
+              IsDefault="True"
+              Content="ＯＫ"
+              Grid.Column="7"
+              Margin="3pt"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
+    </Grid>
+  </Grid>
+</Window>

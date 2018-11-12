@@ -7,17 +7,17 @@
         mc:Ignorable="d"
         Loaded="OnLoad"
         WindowStyle="SingleBorderWindow"
-        Title="設定 | BIDSシリアルコンバーター(id)"
-        MinWidth="240pt"
+        Title="Setting | BIDSシリアルコンバーター(id)"
+        MinWidth="255pt"
         Height="270pt"
-        Width="240pt">
+        Width="255pt">
   <Grid>
-    <Label Content="設定"
-           FontSize="32"
-           Margin="12pt"
+    <Label Content="Setting"
+           FontSize="24"
+           Margin="9pt"
            HorizontalAlignment="Left"
            VerticalAlignment="Top"/>
-    <Label Content="BIDSpp.dll 接続状況"
+    <Label Content="Is BIDSpp Connected"
            FontSize="14"
            Margin="0,30pt,60pt,0"
            HorizontalAlignment="Right"
@@ -44,7 +44,7 @@
            VerticalContentAlignment="Center"
            HorizontalAlignment="Right"
            VerticalAlignment="Top"/>
-    <Label Content="COMポート"
+    <Label Content="COM Port"
            Height="24pt"
            FontSize="14"
            Margin="30pt,60pt,0,0"
@@ -116,7 +116,7 @@
         <DropShadowEffect ShadowDepth="3" Opacity="0.5"/>
       </Ellipse.Effect>
     </Ellipse>
-    <Label Content="シリアル通信 接続状況"
+    <Label Content="Is Serial Connected"
            Height="24pt"
            FontSize="14"
            Margin="84pt,0,0,42pt"
@@ -135,14 +135,21 @@
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
       <Button Click="ReLoad"
-              Content="再読込"
+              Content="Reload"
               Grid.Column="0"
+              Margin="3pt"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"/>
+      <Button Click="GIPIBtnSettingWinShow"
+              Content="GIPI Btn&#xa;Setting"
+              FontSize="8pt"
+              Grid.Column="1"
               Margin="3pt"
               VerticalAlignment="Stretch"
               HorizontalAlignment="Stretch"/>
       <Button Click="CancelEv"
               IsCancel="True"
-              Content="キャンセル"
+              Content="Cancel"
               Grid.Column="2"
               Margin="3pt"
               VerticalAlignment="Stretch"

@@ -82,5 +82,16 @@ namespace BIDSid_SerCon.Properties {
                 this["IsDTRSettingDefault"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public byte[] GIPIBtn{
+            get {
+                return ((byte[])(this["GIPIBtn"]));
+            }
+            set {
+                this["GIPIBtn"] = value;
+            }
+        }
     }
 }
