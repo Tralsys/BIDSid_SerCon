@@ -1,23 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
-namespace BIDSid_SerCon
+namespace TR.BIDSid_SerCon
 {
   /// <summary>
   /// GIPIBtnSetting.xaml の相互作用ロジック
   /// </summary>
   public partial class GIPIBtnSetting : Window
   {
+    /// <summary>ボタンの名称一覧</summary>
     public static readonly string[] Btns = new string[20]
     {
       "Horn1",
@@ -41,35 +33,44 @@ namespace BIDSid_SerCon
       "ATS_K",
       "ATS_L"
     };
-    public GIPIBtnSetting()
-    {
-      InitializeComponent();
-    }
 
+    /// <summary>GIPIBtnSettingクラスを初期化</summary>
+    public GIPIBtnSetting() => InitializeComponent();
+
+    /// <summary>リセットボタン押下時のイベント動作実装</summary>
+    /// <param name="sender">押下されたボタンの情報</param>
+    /// <param name="e">Event Data</param>
     private void Reset(object sender, RoutedEventArgs e)
     {
       if (Properties.Settings.Default.GIPIBtn?.Length != 20) Properties.Settings.Default.GIPIBtn = new byte[20];
-      for (byte i = 0; i < 20; i++)
-      {
-        BtnSettingsInd[i] = i;
-      }
+      for (byte i = 0; i < 20; i++) BtnSettingsInd[i] = i;
+      
       MessageBox.Show("Button設定を初期化しました。\n保存するには「ＯＫ」をクリックしてください。\n"+
         "Button Assign Setting Reset\nPlease Enter the Button \"ＯＫ\" if you want to save.", "BIDS Serial Converter",
         MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
-    private void CancelEv(object sender, RoutedEventArgs e)
-    {
-      Close();
-    }
+    /// <summary>キャンセルボタン押下時のイベント動作実装</summary>
+    /// <param name="sender">押下されたボタンの情報</param>
+    /// <param name="e">Event Data</param>
+    private void CancelEv(object sender, RoutedEventArgs e) => Close();
 
+    /// <summary>OKボタン押下時のイベント動作実装</summary>
+    /// <param name="sender">押下されたボタンの情報</param>
+    /// <param name="e">Event Data</param>
     private void EnterEv(object sender, RoutedEventArgs e)
     {
       Properties.Settings.Default.GIPIBtn = BtnSettingsInd;
       ID.GIPIBtnInd = BtnSettingsInd;
       Close();
     }
-    byte[] BtnSettingsInd = new byte[20];
+
+    /// <summary>ボタンコマンドの割り当てインデックス一覧</summary>
+    private byte[] BtnSettingsInd = new byte[20];
+
+    /// <summary>ロード時のイベント動作実装</summary>
+    /// <param name="sender">読み込まれたページの情報</param>
+    /// <param name="e">Event Data</param>
     private void OnLoad(object sender, RoutedEventArgs e)
     {
 
@@ -86,10 +87,7 @@ namespace BIDSid_SerCon
           RowDefinition r2 = new RowDefinition();
           gd.RowDefinitions.Add(r1);
           gd.RowDefinitions.Add(r2);
-          Label l = new Label()
-          {
-            Content = "Button " + n.ToString(),
-          };
+          Label l = new Label() { Content = "Button " + n.ToString() };
           ComboBox cb = new ComboBox()
           {
             Name = "Btn" + n.ToString(),
@@ -111,6 +109,9 @@ namespace BIDSid_SerCon
       }
     }
 
+    /// <summary>ComboBoxの選択要素変更時のイベント動作実装</summary>
+    /// <param name="sender">操作されたComboBoxの情報</param>
+    /// <param name="e">Event Data</param>
     private void ComboBoxSelectedIndChanged(object sender, SelectionChangedEventArgs e)
     {
       try
