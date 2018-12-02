@@ -9,6 +9,11 @@ namespace TR.BIDSid_SerCon
   public class ID : IInputDevice
   //public class ID
   {
+    public static event EventHandler StringGot;
+    public static event EventHandler StringSent;
+
+
+
     public event InputEventHandler LeverMoved;
     public event InputEventHandler KeyDown;
     public event InputEventHandler KeyUp;
@@ -95,9 +100,16 @@ namespace TR.BIDSid_SerCon
 
     public void Load(string settingsPath)
     {
+      SerMon.StringSendReq += SerMon_StringSendReq;
       BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
       Properties.Settings.Default.Upgrade();
       SerialLoad();
+    }
+
+    private void SerMon_StringSendReq(object sender, EventArgs e)
+    {
+      Se?.WriteLine((string)sender);
+      StringSent?.Invoke(sender, null);
     }
 
     public void Tick()
@@ -277,7 +289,7 @@ namespace TR.BIDSid_SerCon
     static BIDSSharedMemoryData BSMD = new BIDSSharedMemoryData();
 
     SerialPort Se = null;
-
+    
     private void SerialLoad()
     {
       Se = new SerialPort(Properties.Settings.Default.COMPortName, Properties.Settings.Default.BaudRateNum)
@@ -316,6 +328,7 @@ namespace TR.BIDSid_SerCon
           MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No) SerialDispose();
       }
       if (GetStr.Length <= 0) return;
+      StringGot?.Invoke(GetStr, null);
       try
       {
         if (!GetStr.Contains("\n")) { LastCom += GetStr; return; }

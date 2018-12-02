@@ -1,0 +1,67 @@
+﻿<Window x:Class="TR.BIDSid_SerCon.SerMon"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TR.BIDSid_SerCon"
+        mc:Ignorable="d"
+        Loaded="OnLoad"
+        Unloaded="OnUnLoad"
+        Title="Serial Monitor | BIDSid_SerCon" Height="450" Width="800">
+  <Grid Background="LightGray">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="50"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="40"/>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+    <Label Content="シリアルモニタ"
+           Margin="5"
+           FontSize="18"/>
+    <Label Content="受信側"
+           HorizontalAlignment="Right"
+           VerticalAlignment="Bottom"
+           Margin="5"/>
+    <Label Content="送信側"
+           Grid.Column="1"
+           HorizontalAlignment="Right"
+           VerticalAlignment="Bottom"
+           Margin="5"/>
+    <TextBox Name="SendStrBox"
+             Height="20"
+             VerticalAlignment="Bottom"
+             Margin="2,0,84,2"
+             Grid.Column="1"
+             Grid.Row="1"/>
+
+    <Button Height="20" Width="80"
+            Click="SerSendEv"
+            Content="Send(Enter)"
+            Grid.Column="1"
+            Grid.Row="1"
+            Margin="2"
+            IsDefault="True"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"/>
+    <ScrollViewer Grid.Row="1"
+                  Background="White">
+      <TextBlock Name="SerialGet"/>
+    </ScrollViewer>
+    <ScrollViewer Grid.Row="1"
+                  Grid.Column="1"
+                  Margin="0,0,0,24"
+                  Background="White">
+      <TextBlock Name="SerialSender"/>
+    </ScrollViewer>
+    <Button Click="CloseEv"
+            Grid.Row="2"
+            Grid.Column="1"
+            Content="閉じる"
+            Margin="5"
+            Width="80"
+            HorizontalAlignment="Right"/>
+  </Grid>
+</Window>
