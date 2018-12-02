@@ -123,6 +123,11 @@
            HorizontalAlignment="Left"
            VerticalAlignment="Bottom"/>
 
+    <Button Click="SerMonShow"
+            Content="Serial Monitor"
+            Margin="0,0,3pt,33pt"
+            VerticalAlignment="Bottom"
+            HorizontalAlignment="Right"/>
     <Grid Background="LightGray"
           HorizontalAlignment="Stretch"
           VerticalAlignment="Bottom"

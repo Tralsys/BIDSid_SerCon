@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 
@@ -126,6 +127,10 @@ namespace TR.BIDSid_SerCon
     {
       (new GIPIBtnSetting()).Show();
     }
+
+    private void SerMonShow(object sender, RoutedEventArgs e) => new Thread(new ThreadStart(SerMonShowVOID)).Start();
+    
+    private void SerMonShowVOID() => new SerMon().Show();
   }
 
 

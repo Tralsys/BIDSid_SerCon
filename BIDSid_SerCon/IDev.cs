@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using Mackoy.Bvets;
 
@@ -100,12 +101,15 @@ namespace TR.BIDSid_SerCon
 
     public void Load(string settingsPath)
     {
+#if DEBUG
+      (new Thread(new ThreadStart(DebugMsgShow))).Start();
+#endif
       SerMon.StringSendReq += SerMon_StringSendReq;
       BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
       Properties.Settings.Default.Upgrade();
       SerialLoad();
     }
-
+    private void DebugMsgShow() => MessageBox.Show("This is the Debug Build", "BIDSid_SerCon", MessageBoxButton.OK, MessageBoxImage.Information);
     private void SerMon_StringSendReq(object sender, EventArgs e)
     {
       Se?.WriteLine((string)sender);
