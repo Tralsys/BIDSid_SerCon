@@ -1,0 +1,3 @@
+# BIDSid_SerCon
+BVEの情報をBIDSから受け取り、Serialに変換する
+将来的に別ソフト化する可能性あり
