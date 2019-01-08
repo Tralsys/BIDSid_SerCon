@@ -1,4 +1,3 @@
-#include <string.h> 
 #include "BIDS.h"
 
 float SerialGet(String Command) {
@@ -25,6 +24,6 @@ float DataGet(String Identifier, int Num) {
 int VersionCheck(int VersionNum) {
   int ret;
   int vnum = DataGet("V", VersionNum);
-  if (vnum < VersionNum) VersionNum = vnum;
+  ret = vnum < VersionNum ? VersionNum : vnum;
   return ret;
 }

@@ -15,8 +15,6 @@ void setup() {
   Serial.begin(19200);
   while (!Serial);
   VersionNum = VersionCheck(VersionNum);
-  int vnum = DataGet("V", VersionNum);
-  if (vnum < VersionNum) VersionNum = vnum;
   lcd.begin(16, 2);
 }
 
