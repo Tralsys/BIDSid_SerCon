@@ -23,28 +23,26 @@ namespace TR.BIDSid_SerCon
     static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
     [DllImport("kernel32.dll")]
     static extern bool CloseHandle(IntPtr hObject);
-    static private readonly uint size = (uint)Marshal.SizeOf(typeof(ID.BIDSSharedMemoryData));
+    static private readonly uint size = (uint)Marshal.SizeOf(typeof(IDev.BIDSSharedMemoryData));
     static IntPtr hSharedMemory = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, size, SRAMName);
     static IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
     static public bool IsBIDSppConnected
     {
       get
       {
-        return ((ID.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(ID.BIDSSharedMemoryData))).IsEnabled;
+        return ((IDev.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(IDev.BIDSSharedMemoryData))).IsEnabled;
       }
     }
     static public int BIDSppVersion
     {
       get
       {
-        return ((ID.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(ID.BIDSSharedMemoryData))).VersionNum;
+        return ((IDev.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(IDev.BIDSSharedMemoryData))).VersionNum;
       }
     }
 
-    public MainWindow()
-    {
-      InitializeComponent();
-    }
+    public MainWindow() => InitializeComponent();
+    
 
     private void CancelEv(object sender, RoutedEventArgs e)
     {
@@ -52,10 +50,8 @@ namespace TR.BIDSid_SerCon
       CloseHandle(hSharedMemory);
       Close();
     }
-    private void OnLoad(object sender, RoutedEventArgs e)
-    {
-      ReLoad(null, null);
-    }
+    private void OnLoad(object sender, RoutedEventArgs e) => ReLoad(null, null);
+    
     private readonly List<int> BaudRateList = new List<int>() { 4800, 9600, 19200, 38400, 57600, 115200 };
     private void EnterEv(object sender, RoutedEventArgs e)
     {
@@ -73,7 +69,7 @@ namespace TR.BIDSid_SerCon
         Properties.Settings.Default.IsDTRSettingDefault = (bool)IsDTRSettingDef.IsChecked;
 
         Properties.Settings.Default.Save();
-        ID.IsSettingChanged = true;
+        IDev.IsSettingChanged = true;
       }
 
 
@@ -95,22 +91,14 @@ namespace TR.BIDSid_SerCon
         BIDSppConnectEllipse.Fill = new SolidColorBrush(Colors.Red);
         BIDSppVerLab.Content = string.Empty;
       }
-      if (ID.IsSerialConnected) SerialConnectEllipse.Fill = new SolidColorBrush(Colors.LightGreen);
+      if (IDev.IsSerialConnected) SerialConnectEllipse.Fill = new SolidColorBrush(Colors.LightGreen);
       else SerialConnectEllipse.Fill = new SolidColorBrush(Colors.Red);
 
       List<string> PortList = new List<string>();
       string[] pnl = { string.Empty };
-      try
-      {
-        pnl = SerialPort.GetPortNames();
-      }catch(Exception ex)
-      {
-        MessageBox.Show(ex.Message, "BIDS SerCon");
-      }
-      foreach (string pn in pnl)
-      {
-        PortList.Add(pn);
-      }
+      try{ pnl = SerialPort.GetPortNames(); }catch(Exception ex){ MessageBox.Show(ex.Message, "BIDS SerCon"); }
+      foreach (string pn in pnl) PortList.Add(pn);
+      
       COMPortListBox.ItemsSource = PortList;
       BaudRateListBox.ItemsSource = BaudRateList;
       string lpn = Properties.Settings.Default.COMPortName;
@@ -123,10 +111,7 @@ namespace TR.BIDSid_SerCon
       IsDTRSettingDef.IsChecked = Properties.Settings.Default.IsDTRSettingDefault;
     }
 
-    private void GIPIBtnSettingWinShow(object sender, RoutedEventArgs e)
-    {
-      (new GIPIBtnSetting()).Show();
-    }
+    private void GIPIBtnSettingWinShow(object sender, RoutedEventArgs e)=> (new GIPIBtnSetting()).Show();
 
     private void SerMonShow(object sender, RoutedEventArgs e) => new Thread(new ThreadStart(SerMonShowVOID)).Start();
     

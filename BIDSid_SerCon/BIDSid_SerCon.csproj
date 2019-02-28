@@ -54,7 +54,7 @@
     <Compile Include="SerMon.xaml.cs">
       <DependentUpon>SerMon.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SMem.cs" />
+    <None Include="SMem.cs" />
     <None Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

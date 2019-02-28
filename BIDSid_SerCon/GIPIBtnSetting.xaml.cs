@@ -61,7 +61,7 @@ namespace TR.BIDSid_SerCon
     private void EnterEv(object sender, RoutedEventArgs e)
     {
       Properties.Settings.Default.GIPIBtn = BtnSettingsInd;
-      ID.GIPIBtnInd = BtnSettingsInd;
+      IDev.GIPIBtnInd = BtnSettingsInd;
       Close();
     }
 

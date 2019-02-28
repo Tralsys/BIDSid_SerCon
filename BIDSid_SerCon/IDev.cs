@@ -7,17 +7,62 @@ using Mackoy.Bvets;
 
 namespace TR.BIDSid_SerCon
 {
-  public class ID : IInputDevice
+  public class IDev : IInputDevice
   //public class ID
   {
+    public event InputEventHandler LeverMoved;
+    public event InputEventHandler KeyDown;
+    public event InputEventHandler KeyUp;
+    public void Load(string settingsPath)
+    {
+      /*try
+      {
+#if DEBUG
+        (new Thread(new ThreadStart(DebugMsgShow))).Start();
+#endif
+        SerMon.StringSendReq += SerMon_StringSendReq;
+        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
+        Properties.Settings.Default.Upgrade();
+        SerialLoad();
+      }
+      catch(Exception e) { MessageBox.Show(e.Message, "BIDS_SerCon LoadM"); }*/
+    }
+    public void Configure(System.Windows.Forms.IWin32Window owner) => (new MainWindow()).Show();
+    public void Dispose()
+    {
+      /*Disposing = true;
+      SerialDispose();
+      UnmapViewOfFile(pMemory);
+      CloseHandle(hSharedMemory);
+      Properties.Settings.Default.Save();
+      */
+    }
+    public void Tick()
+    {
+      /*
+      try
+      {
+        if (IsSettingChanged) SerialDispose();
+        SerialTick();
+      }catch(Exception e)
+      {
+        MessageBox.Show(e.Message, "BIDSid_SerCon TickM");
+      }
+      */
+    }
+    public void SetAxisRanges(int[][] ranges)
+    {
+      //if (ranges[3][0] < 0 && ranges[3][1] > 0) IsOneHandle = true;
+      //else IsOneHandle = false;
+    }
+
+
+
     public static event EventHandler StringGot;
     public static event EventHandler StringSent;
 
 
 
-    public event InputEventHandler LeverMoved;
-    public event InputEventHandler KeyDown;
-    public event InputEventHandler KeyUp;
     /// <summary>Serialが接続に成功しているかどうか</summary>
     static public bool IsSerialConnected { get; private set; } = false;
     /// <summary>マスコンのタイプがワンハンドルかどうか</summary>
@@ -87,28 +132,9 @@ namespace TR.BIDSid_SerCon
       PostMessage(BVEWindow, 0x0101, (IntPtr)num, (IntPtr)0);
       return true;
     }
-    public void Configure(System.Windows.Forms.IWin32Window owner) => (new MainWindow()).Show();
 
     private static bool Disposing = false;
-    public void Dispose()
-    {
-      Disposing = true;
-      SerialDispose();
-      UnmapViewOfFile(pMemory);
-      CloseHandle(hSharedMemory);
-      Properties.Settings.Default.Save();
-    }
 
-    public void Load(string settingsPath)
-    {
-#if DEBUG
-      (new Thread(new ThreadStart(DebugMsgShow))).Start();
-#endif
-      SerMon.StringSendReq += SerMon_StringSendReq;
-      BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
-      Properties.Settings.Default.Upgrade();
-      SerialLoad();
-    }
     private void DebugMsgShow() => MessageBox.Show("This is the Debug Build", "BIDSid_SerCon", MessageBoxButton.OK, MessageBoxImage.Information);
     private void SerMon_StringSendReq(object sender, EventArgs e)
     {
@@ -116,17 +142,6 @@ namespace TR.BIDSid_SerCon
       StringSent?.Invoke(sender, null);
     }
 
-    public void Tick()
-    {
-      if (IsSettingChanged) SerialDispose();
-      SerialTick();
-    }
-
-    public void SetAxisRanges(int[][] ranges)
-    {
-      if (ranges[3][0] < 0 && ranges[3][1] > 0) IsOneHandle = true;
-      else IsOneHandle = false;
-    }
 
     private static readonly string SRAMName = "BIDSSharedMem";
     //SECTION_ALL_ACCESS=983071
@@ -304,12 +319,12 @@ namespace TR.BIDSid_SerCon
         RtsEnable = Properties.Settings.Default.RTSSetting,
         NewLine = "\n"
       };
-      try{ Se.Open(); }
+      try{ Se?.Open(); }
       catch (Exception e)
       {
         if (MessageBox.Show("ポートオープン処理エラー\n" + e.Message + "\n再試行しますか？", "BIDS SerCon", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)SerialLoad();
       }
-      if (Se.IsOpen) IsSerialConnected = true;
+      if (Se?.IsOpen==true) IsSerialConnected = true;
       else
       {
         Se = null;
@@ -340,7 +355,7 @@ namespace TR.BIDSid_SerCon
         if (GetCom.Length == 1)
         {
           string ReturnData = DataSelect(GetCom[0]);
-          try{ if (ReturnData != string.Empty) Se.WriteLine(ReturnData); }
+          try{ if (ReturnData != string.Empty) StringSent?.Invoke(ReturnData, null);/*Se.WriteLine(ReturnData);*/ }
           catch (Exception e)
           {
             if (MessageBox.Show("情報送信エラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
@@ -353,7 +368,7 @@ namespace TR.BIDSid_SerCon
           for (int i = 0; i < GetCom.Length - 1; i++)
           {
             string returnData = DataSelect(GetCom[i]);
-            try{ if (returnData != string.Empty) Se.WriteLine(returnData); }
+            try{ if (returnData != string.Empty) StringSent?.Invoke(returnData, null); /*Se.WriteLine(returnData);*/ }
             catch (Exception e)
             {
               if (MessageBox.Show("情報送信エラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",

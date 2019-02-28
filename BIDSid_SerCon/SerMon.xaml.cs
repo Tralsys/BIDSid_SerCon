@@ -26,8 +26,8 @@ namespace TR.BIDSid_SerCon
 
     private void OnLoad(object sender, RoutedEventArgs e)
     {
-      ID.StringGot += ID_StringGot;
-      ID.StringSent += ID_StringSent;
+      IDev.StringGot += ID_StringGot;
+      IDev.StringSent += ID_StringSent;
     }
 
     private void ID_StringSent(object sender, EventArgs e)
@@ -44,8 +44,8 @@ namespace TR.BIDSid_SerCon
 
     private void OnUnLoad(object sender, RoutedEventArgs e)
     {
-      ID.StringGot -= ID_StringGot;
-      ID.StringSent -= ID_StringSent;
+      IDev.StringGot -= ID_StringGot;
+      IDev.StringSent -= ID_StringSent;
     }
 
     private void SerSendEv(object sender, RoutedEventArgs e)
