@@ -14,16 +14,16 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 void setup() {
   Serial.begin(19200);
   while (!Serial);
-  VersionNum = VersionCheck(VersionNum);
+  VersionNum = BIDS::VersionCheck(VersionNum);
   lcd.begin(16, 2);
 }
 
 void loop() {
-  int Hour = DataGet("I", "E", 10);
-  int Min = DataGet("I", "E", 11);
-  int Sec = DataGet("I", "E", 12);
-  int MSec = DataGet("I", "E", 13);
-  float MRP = DataGet("I", "E", 4);
+  int Hour = BIDS::DataGet("I", "E", 10);
+  int Min = BIDS::DataGet("I", "E", 11);
+  int Sec = BIDS::DataGet("I", "E", 12);
+  int MSec = BIDS::DataGet("I", "E", 13);
+  float MRP = BIDS::DataGet("I", "E", 4);
   String FirstL = "MR:";
   FirstL.concat(String(MRP));
   if (FirstL.length() <= 13) FirstL.concat("kPa");

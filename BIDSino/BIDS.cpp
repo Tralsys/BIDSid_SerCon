@@ -1,7 +1,7 @@
 #include <arduino.h>
 #include "BIDS.h"
 
-float SerialGet(String Command) {
+float BIDS::SerialGet(String Command) {
   Serial.print(Command);
   Serial.print("\n");
   //Serial.println();
@@ -15,14 +15,14 @@ float SerialGet(String Command) {
   return 0;
 }
 
-float DataGet(String Identifier, String Symbol, int Num) {
+float BIDS::DataGet(String Identifier, String Symbol, int Num) {
   return SerialGet("TR" + Identifier + Symbol + String(Num));
 }
-float DataGet(String Identifier, int Num) {
+float BIDS::DataGet(String Identifier, int Num) {
   return DataGet(Identifier, "", Num);
 }
 
-int VersionCheck(int VersionNum) {
+int BIDS::VersionCheck(int VersionNum) {
   int ret;
   int vnum = DataGet("V", VersionNum);
   ret = vnum < VersionNum ? VersionNum : vnum;
