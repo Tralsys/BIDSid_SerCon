@@ -1,3 +1,6 @@
+#ifndef _BIDS_
+#define _BIDS_
+
 namespace BIDS{
 float SerialGet(String);
 float DataGet(String, String, int);
@@ -10,3 +13,5 @@ enum Car : int;
 enum E : int;
 enum Handle : int;
 }
+
+#endif //_BIDS_
