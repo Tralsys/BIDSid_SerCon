@@ -35,7 +35,7 @@ enum Reverser : int {
   Neutral = 0,  //切
   Front = 1,    //前
 };
-enum key : int {
+enum Key : int {
   Horn_1,               //default:enter
   Horn_2,               //default:+
   MusicHorn,            //default:-
