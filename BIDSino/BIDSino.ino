@@ -45,5 +45,22 @@ void loop() {
   lcd.print(FirstL);
   lcd.setCursor(0, 1);
   lcd.print(SecL);
+
+
+  /*---examples---*/
+//*//
+  //if want to set reverser (nutral)
+  //BIDS::DataGet("R", BIDS::Reverser::Neutral);
+
+  //if want to generate a press event (L key)
+  BIDS::DataGet("P", BIDS::Key::L);
+
+  //if want to get car status (car number)
+  BIDS::DataGet("I", "C", BIDS::Car::CarNumber);
+
+  //if want to get data (train speed)
+  BIDS::DataGet("I", "E", BIDS::E::Speed);
+
+//*/
   delay(100);
 }
