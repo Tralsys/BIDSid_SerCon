@@ -9,21 +9,23 @@
 */
 #include "BIDS.h"
 int VersionNum = 100;
+c_BIDS * BIDS;
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+
 void setup() {
-  Serial.begin(19200);
   while (!Serial);
-  VersionNum = BIDS::VersionCheck(VersionNum);
   lcd.begin(16, 2);
+  Serial.begin(19200);
+  BIDS = new c_BIDS(VersionNum);
 }
 
 void loop() {
-  int Hour = BIDS::DataGet("I", "E", 10);
-  int Min = BIDS::DataGet("I", "E", 11);
-  int Sec = BIDS::DataGet("I", "E", 12);
-  int MSec = BIDS::DataGet("I", "E", 13);
-  float MRP = BIDS::DataGet("I", "E", 4);
+  int Hour = BIDS->DataGet("I", "E", 10);
+  int Min = BIDS->DataGet("I", "E", 11);
+  int Sec = BIDS->DataGet("I", "E", 12);
+  int MSec = BIDS->DataGet("I", "E", 13);
+  float MRP = BIDS->DataGet("I", "E", 4);
   String FirstL = "MR:";
   FirstL.concat(String(MRP));
   if (FirstL.length() <= 13) FirstL.concat("kPa");
@@ -46,21 +48,23 @@ void loop() {
   lcd.setCursor(0, 1);
   lcd.print(SecL);
 
+  Serial.println(FirstL);
+  Serial.println(SecL);
 
   /*---examples---*/
-//*//
+  //*//
   //if want to set reverser (nutral)
-  //BIDS::DataGet("R", BIDS::Reverser::Neutral);
+  //BIDS->DataGet("R", BIDS->Reverser::Neutral);
 
   //if want to generate a press event (L key)
-  BIDS::DataGet("P", BIDS::Key::L);
+  //BIDS->DataGet("P", BIDS->Key::L);
 
   //if want to get car status (car number)
-  BIDS::DataGet("I", "C", BIDS::Car::CarNumber);
+  //BIDS->DataGet("I", "C", BIDS->Car::CarNumber);
 
   //if want to get data (train speed)
-  BIDS::DataGet("I", "E", BIDS::E::Speed);
+  //BIDS->DataGet("I", "E", BIDS->E::Speed);
 
-//*/
+  //*/
   delay(100);
 }

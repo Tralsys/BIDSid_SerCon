@@ -1,11 +1,31 @@
 #include <arduino.h>
 #include "BIDS.h"
 
-float BIDS::SerialGet(String Command) {
+c_BIDS::c_BIDS() {
+  this->Version = VersionCheck(100);
+}
+c_BIDS::c_BIDS(int v = 100) {
+  this->Version = VersionCheck(v);
+}
+
+float c_BIDS::SerialGet(String Command) {
+  unsigned long sendtime;
+  int cnt = 0;
   Serial.print(Command);
   Serial.print("\n");
-  //Serial.println();
-  while (Serial.available() <= 0);
+  sendtime = millis();
+  while (Serial.available() <= 0) {
+    //failed to get data (after 1 minute)
+    if (cnt >= 6) return 0;
+
+    //retransmission (every 10 seconds)
+    if (millis() - sendtime > 10000) {
+      Serial.print(Command);
+      Serial.print("\n");
+      sendtime = millis();
+      cnt++;
+    }
+  }
   String GetData = Serial.readStringUntil('\n');
   GetData.replace("\n", "");
   if (GetData.startsWith(Command)) {
@@ -15,14 +35,14 @@ float BIDS::SerialGet(String Command) {
   return 0;
 }
 
-float BIDS::DataGet(String Identifier, String Symbol, int Num) {
+float c_BIDS::DataGet(String Identifier, String Symbol, int Num) {
   return SerialGet("TR" + Identifier + Symbol + String(Num));
 }
-float BIDS::DataGet(String Identifier, int Num) {
+float c_BIDS::DataGet(String Identifier, int Num) {
   return DataGet(Identifier, "", Num);
 }
 
-int BIDS::VersionCheck(int VersionNum) {
+int c_BIDS::VersionCheck(int VersionNum) {
   int ret;
   int vnum = DataGet("V", VersionNum);
   ret = vnum < VersionNum ? VersionNum : vnum;
@@ -30,12 +50,12 @@ int BIDS::VersionCheck(int VersionNum) {
 }
 
 
-enum BIDS::Reverser : int {
+enum c_BIDS::Reverser : int {
   Rear = -1,    //後
   Neutral = 0,  //切
   Front = 1,    //前
 };
-enum BIDS::key : int {
+enum c_BIDS::key : int {
   Horn_1,               //default:enter
   Horn_2,               //default:+
   MusicHorn,            //default:-
@@ -57,14 +77,14 @@ enum BIDS::key : int {
   K,                    //default:9
   L,                    //default:0
 };
-enum BIDS::Car : int {
+enum c_BIDS::Car : int {
   BrakeNotchCount,  //Number of Brake Notches
   PowerNotchCount,  //Number of Power Notches
   ATSNotchCount,    //ATS Cancel Notch
   B67NotchCount,    //80% Brake (67 degree)
   CarNumber,        //Number of Cars
 };
-enum BIDS::E : int {
+enum c_BIDS::E : int {
   Location,     //Train Position (Z-axis) [m]
   Speed,        //Train Speed [km/h]
   Time,         //Time [ms]
@@ -75,7 +95,7 @@ enum BIDS::E : int {
   SapPressure,  //Pressure of SAP [Pa]
   Current,      //Current [A]
 };
-enum BIDS::Handle : int {
+enum c_BIDS::Handle : int {
   BrakeNotch,     //Brake Notch
   PowerNotch,     //Power Notch
   Reverser,       //Reverser Position
