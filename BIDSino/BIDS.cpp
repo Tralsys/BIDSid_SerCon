@@ -1,11 +1,21 @@
+//BIDS.h
+//Base : stop-pattern
+//v202 Support : TetsuOtter
+
+
 #include <arduino.h>
 #include "BIDS.h"
+#define INITIAL_BAUDRATE 19200
+#define TARGET_VERSION 202
 
 c_BIDS::c_BIDS() {
-  this->Version = VersionCheck(100);
+  this->Version = VersionCheck(TARGET_VERSION, INITIAL_BAUDRATE);
 }
-c_BIDS::c_BIDS(int v = 100) {
-  this->Version = VersionCheck(v);
+c_BIDS::c_BIDS(int v = TARGET_VERSION) {
+  this->Version = VersionCheck(v, INITIAL_BAUDRATE);
+}
+c_BIDS::c_BIDS(int v = TARGET_VERSION, int baudRate = INITIAL_BAUDRATE) {
+  this->Version = VersionCheck(v, baudRate);
 }
 
 float c_BIDS::SerialGet(String Command) {
@@ -26,13 +36,9 @@ float c_BIDS::SerialGet(String Command) {
       cnt++;
     }
   }
-  String GetData = Serial.readStringUntil('\n');
-  GetData.replace("\n", "");
-  if (GetData.startsWith(Command)) {
-    GetData.replace(Command + "X", "");
-    return GetData.toFloat();
-  }
-  return 0;
+
+  float retFlo = 0;
+  return (DataGet(retFlo, Command + "X") != "") ? retFlo : 0;
 }
 
 float c_BIDS::DataGet(String Identifier, String Symbol, int Num) {
@@ -41,10 +47,32 @@ float c_BIDS::DataGet(String Identifier, String Symbol, int Num) {
 float c_BIDS::DataGet(String Identifier, int Num) {
   return DataGet(Identifier, "", Num);
 }
+String c_BIDS::DataGet(float& Data, String Header = "TR") {
+  if (Serial.available() <= 0)return -1;
+  String GotData = Serial.readStringUntil('\n');
+  GotData.replace("\n", "");
 
-int c_BIDS::VersionCheck(int VersionNum) {
-  int ret;
-  int vnum = DataGet("V", VersionNum);
+  if (GotData.startsWith(Header)) {
+    Data = GotData.substring(GotData.indexOf("X")).toFloat();
+    return GotData;
+  }
+  else {
+    Data = 0;
+    return "";
+  }
+}
+
+int c_BIDS::VersionCheck(int VersionNum, int BaudRate) {
+  Serial.begin(INITIAL_BAUDRATE);
+  int ret, vnum;
+  if (VersionNum >= 202 && BaudRate != INITIAL_BAUDRATE) {
+    vnum = SerialGet("TRV" + String(VersionNum) + "BR" + String(BaudRate));
+    if (vnum >= 202) {
+      Serial.end();
+      Serial.begin(BaudRate);
+    }
+  } else vnum = DataGet("V", VersionNum);
+
   ret = vnum < VersionNum ? VersionNum : vnum;
   return ret;
 }
