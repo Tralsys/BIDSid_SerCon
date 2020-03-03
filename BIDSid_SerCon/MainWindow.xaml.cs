@@ -13,43 +13,20 @@ namespace TR.BIDSid_SerCon
   /// </summary>
   public partial class MainWindow : Window
   {
-    private static readonly string SRAMName = "BIDSSharedMem";
-    //SECTION_ALL_ACCESS=983071
-    [DllImport("kernel32.dll", SetLastError = true)]
-    static extern IntPtr CreateFileMapping(UIntPtr hFile, IntPtr lpAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
-    [DllImport("kernel32.dll", SetLastError = true)]
-    static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, uint dwNumberOfBytesToMap);
-    [DllImport("kernel32.dll")]
-    static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
-    [DllImport("kernel32.dll")]
-    static extern bool CloseHandle(IntPtr hObject);
-    static private readonly uint size = (uint)Marshal.SizeOf(typeof(IDev.BIDSSharedMemoryData));
-    static IntPtr hSharedMemory = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, size, SRAMName);
-    static IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
     static public bool IsBIDSppConnected
     {
-      get
-      {
-        return ((IDev.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(IDev.BIDSSharedMemoryData))).IsEnabled;
-      }
+      get => IDev.BSMD.IsEnabled;
     }
     static public int BIDSppVersion
     {
-      get
-      {
-        return ((IDev.BIDSSharedMemoryData)Marshal.PtrToStructure(pMemory, typeof(IDev.BIDSSharedMemoryData))).VersionNum;
-      }
+      get => IDev.BSMD.VersionNum;
     }
 
     public MainWindow() => InitializeComponent();
-    
 
-    private void CancelEv(object sender, RoutedEventArgs e)
-    {
-      UnmapViewOfFile(pMemory);
-      CloseHandle(hSharedMemory);
-      Close();
-    }
+
+    private void CancelEv(object sender, RoutedEventArgs e) => Close();
+    
     private void OnLoad(object sender, RoutedEventArgs e) => ReLoad(null, null);
     
     private readonly List<int> BaudRateList = new List<int>() { 4800, 9600, 19200, 38400, 57600, 115200 };
