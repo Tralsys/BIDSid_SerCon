@@ -8,7 +8,6 @@ namespace TR.BIDSid_SerCon
 {
   public partial class IDev
   {
-    public static event EventHandler ASFired;
     public static bool IsStarted = false;
     const int OpenDBias = 1000000;
     const int ElapDBias = 100000;

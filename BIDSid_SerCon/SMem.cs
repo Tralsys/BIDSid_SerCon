@@ -7,7 +7,6 @@ namespace TR.BIDSid_SerCon
 {
   public class SMemLib : IDisposable
   {
-    private static readonly string SRAMName = "BIDSSharedMem";
     //SECTION_ALL_ACCESS=983071
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern IntPtr CreateFileMapping(UIntPtr hFile, IntPtr lpAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
@@ -70,8 +69,11 @@ namespace TR.BIDSid_SerCon
     static readonly IntPtr vBSMD = MapViewOfFile(BSMDptr, 983071, 0, 0, (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData)));
     static readonly IntPtr vP = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData)) * 257, "BIDSSharedMemoryPn");
     static readonly IntPtr vS = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData)) * 257, "BIDSSharedMemorySn");
+    
+    bool IsDisposing = false;
     public void Dispose()
     {
+      IsDisposing = true;
       UnmapViewOfFile(vBSMD);
       UnmapViewOfFile(vP);
       UnmapViewOfFile(vS);
@@ -84,33 +86,51 @@ namespace TR.BIDSid_SerCon
 
     public void PRead(out int[] pd)
     {
-      PRead();
       pd = new int[_PanelD.Length];
+      if (IsDisposing) return;
+      PRead();
       Array.Copy(_PanelD, 0, pd, 0, pd.Length);
     }
     public void SRead(out int[] sd)
     {
-      SRead();
       sd = new int[_SoundD.Length];
+      if (IsDisposing) return;
+      SRead();
       Array.Copy(_SoundD, 0, sd, 0, sd.Length);
     }
     public void Read()
     {
+      if (IsDisposing) return;
+
       BRead();
       PRead();
       SRead();
     }
     public void PRead()
     {
-
+      if (IsDisposing) return;
+      int[] m = Ptr2IntArr(vP, 257);
+      Array.Copy(m, 1, Panels, 0, m.Length - 1);
     }
     public void SRead()
     {
+      if (IsDisposing) return;
+      int[] m = Ptr2IntArr(vS, 257);
+      Array.Copy(m, 1, Sounds, 0, m.Length - 1);
+    }
+    private int[] Ptr2IntArr(IntPtr ptr,int len)
+    {
+      if (ptr == IntPtr.Zero) return null;
+      int[] t = new int[len];
 
+      Marshal.Copy(ptr, t, 0, t.Length);
+
+      return t;
     }
     public void BRead()
     {
-
+      if (IsDisposing) return;
+      BIDSSMemData = (BIDSSharedMemoryData)Marshal.PtrToStructure(vBSMD, typeof(BIDSSharedMemoryData));
     }
   }
 }

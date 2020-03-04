@@ -69,12 +69,13 @@ namespace TR.BIDSid_SerCon
     public Hand HandleData;
     /// <summary>ドアが閉まっているかどうか</summary>
     public bool IsDoorClosed;
+    /*Panel/Sound DISABLED
     /// <summary>Panelの表示番号配列</summary>
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
     public int[] Panel;
     /// <summary>Soundの値配列</summary>
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
-    public int[] Sound;
+    public int[] Sound;*/
   };
 
   /// <summary>毎フレームごとに取得できるデータ(本家/open共通)</summary>

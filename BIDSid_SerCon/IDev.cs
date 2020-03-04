@@ -48,8 +48,8 @@ namespace TR.BIDSid_SerCon
     }
     public void SetAxisRanges(int[][] ranges)
     {
-      if (ranges[3][0] < 0 && ranges[3][1] > 0) IsOneHandle = true;
-      else IsOneHandle = false;
+      //if (ranges[3][0] < 0 && ranges[3][1] > 0) IsOneHandle = true;
+      //else IsOneHandle = false;
     }
     
     public static event EventHandler StringGot;
@@ -57,8 +57,8 @@ namespace TR.BIDSid_SerCon
 
     /// <summary>Serialが接続に成功しているかどうか</summary>
     static public bool IsSerialConnected { get; private set; } = false;
-    /// <summary>マスコンのタイプがワンハンドルかどうか</summary>
-    private bool IsOneHandle = false;
+    ///// <summary>マスコンのタイプがワンハンドルかどうか</summary>
+    //private bool IsOneHandle = false;
 
     /// <summary>設定が変更されたかどうか</summary>
     public static bool IsSettingChanged = false;
@@ -390,8 +390,8 @@ namespace TR.BIDSid_SerCon
       if (!Disposing && IsSettingChanged){SerialLoad(); IsSettingChanged = false; }
     }
 
-    static int ConnectVersion = 0;
-    static readonly int ProgramVersion = 101;
+    //static int ConnectVersion = 0;
+    //static readonly int ProgramVersion = 101;
 
     static public byte[] GIPIBtnInd = Properties.Settings.Default.GIPIBtn;
 
