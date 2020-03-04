@@ -19,15 +19,15 @@ namespace TR.BIDSid_SerCon
   public partial class SerMon : Window
   {
     static public event EventHandler StringSendReq;
-    public SerMon() => InitializeComponent();
+    public SerMon() { InitializeComponent(); }
 
 
     private void CloseEv(object sender, RoutedEventArgs e) => Close();
 
     private void OnLoad(object sender, RoutedEventArgs e)
     {
-      IDev.StringGot += ID_StringGot;
-      IDev.StringSent += ID_StringSent;
+      //IDev.StringGot += ID_StringGot;
+      //IDev.StringSent += ID_StringSent;
     }
 
     private void ID_StringSent(object sender, EventArgs e)
@@ -44,8 +44,8 @@ namespace TR.BIDSid_SerCon
 
     private void OnUnLoad(object sender, RoutedEventArgs e)
     {
-      IDev.StringGot -= ID_StringGot;
-      IDev.StringSent -= ID_StringSent;
+      //IDev.StringGot -= ID_StringGot;
+      //IDev.StringSent -= ID_StringSent;
     }
 
     private void SerSendEv(object sender, RoutedEventArgs e)

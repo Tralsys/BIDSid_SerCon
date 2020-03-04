@@ -25,7 +25,7 @@ namespace TR.BIDSid_SerCon
       private set
       {
         if (!Equals(value, __BIDSSMemData))
-          IDev.Common_BSMDChanged(value, new BSMDChangedEArgs()
+          AS.Common_BSMDChanged(value, new BSMDChangedEArgs()
           {
             NewData = value,
             OldData = __BIDSSMemData
@@ -42,7 +42,7 @@ namespace TR.BIDSid_SerCon
       private set
       {
         if (!_PanelD.SequenceEqual(value))
-          IDev.Common_PanelDChanged(value, new ArrayDChangedEArgs() { OldArray = _PanelD, NewArray = value });
+          AS.Common_PanelDChanged(value, new ArrayDChangedEArgs() { OldArray = _PanelD, NewArray = value });
         _PanelD = value;
       }
     }
@@ -56,7 +56,7 @@ namespace TR.BIDSid_SerCon
       private set
       {
         if (!_SoundD.SequenceEqual(value))
-          IDev.Common_SoundDChanged(value, new ArrayDChangedEArgs() { OldArray = _SoundD, NewArray = value });
+          AS.Common_SoundDChanged(value, new ArrayDChangedEArgs() { OldArray = _SoundD, NewArray = value });
         _SoundD = value;
       }
     }
@@ -133,4 +133,5 @@ namespace TR.BIDSid_SerCon
       BIDSSMemData = (BIDSSharedMemoryData)Marshal.PtrToStructure(vBSMD, typeof(BIDSSharedMemoryData));
     }
   }
+
 }

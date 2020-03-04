@@ -6,15 +6,16 @@ using TR.BIDSsv;
 
 namespace TR.BIDSid_SerCon
 {
-  public partial class IDev
+  public static class AS
   {
+    public static event EventHandler ASSend;
     public static bool IsStarted = false;
-    const int OpenDBias = 1000000;
-    const int ElapDBias = 100000;
-    const int DoorDBias = 10000;
-    const int HandDBias = 1000;
+    public const int OpenDBias = 1000000;
+    public const int ElapDBias = 100000;
+    public const int DoorDBias = 10000;
+    public const int HandDBias = 1000;
 
-    static private void ASPtr(byte[] ba) => Se.Write(ba, 0, ba.Length);
+    static private void ASPtr(byte[] ba) => ASSend?.Invoke(ba, null);
     static private void ASPtr(string s)
     {
       if (string.IsNullOrEmpty(s)) return;
@@ -23,9 +24,9 @@ namespace TR.BIDSid_SerCon
       ASPtr(Encoding.ASCII.GetBytes(s));
     }
 
-    static private ASList PDAutoList = new ASList();
-    static private ASList SDAutoList = new ASList();
-    static private ASList AutoNumL = new ASList();
+    static public ASList PDAutoList { get; private set; } = new ASList();
+    static public ASList SDAutoList { get; private set; } = new ASList();
+    static public ASList AutoNumL { get; private set; } = new ASList();
 
     internal static void Common_SoundDChanged(object sender, ArrayDChangedEArgs e)
     {
@@ -194,7 +195,7 @@ namespace TR.BIDSid_SerCon
     }
   }
 
-  internal class ASList
+  public class ASList
   {
     private List<string> SL;
     private List<int> IL;

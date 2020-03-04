@@ -145,6 +145,7 @@
               VerticalAlignment="Stretch"
               HorizontalAlignment="Stretch"/>
       <Button Click="GIPIBtnSettingWinShow"
+              IsEnabled="False"
               Content="GIPI Btn&#xa;Setting"
               FontSize="8pt"
               Grid.Column="1"

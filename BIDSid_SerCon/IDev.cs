@@ -8,25 +8,44 @@ using Mackoy.Bvets;
 
 namespace TR.BIDSid_SerCon
 {
-  public partial class IDev : IInputDevice
+  public class IDev : IInputDevice
   {
+    public IDev() => MessageBox.Show("IDev init");
+
     public event InputEventHandler LeverMoved;
     public event InputEventHandler KeyDown;
     public event InputEventHandler KeyUp;
     public void Load(string settingsPath)
     {
+      MessageBox.Show("TEST");
       try
       {
 #if DEBUG
         (new Thread(new ThreadStart(DebugMsgShow))).Start();
 #endif
         SerMon.StringSendReq += SerMon_StringSendReq;
-        BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
+        AS.ASSend += AS_ASSend;
+        //BVEWindow = FindWindowEx(IntPtr.Zero, IntPtr.Zero, null, "Bve trainsim");
         Properties.Settings.Default.Upgrade();
         SerialLoad();
+        
+
       }
       catch(Exception e) { MessageBox.Show(e.Message, "BIDS_SerCon LoadM"); }
     }
+
+    private void AS_ASSend(object sender, EventArgs e)
+    {
+      byte[] a = (byte[])sender;
+      Se?.Write(a, 0, a.Length);
+      StringSend?.Invoke(BitConverter.ToString(a, 0, a.Length), null);
+    }
+    private void SerMon_StringSendReq(object sender, EventArgs e)
+    {
+      Se?.WriteLine((string)sender);
+      StringSend?.Invoke(sender, null);
+    }
+
     public void Configure(System.Windows.Forms.IWin32Window owner) => (new MainWindow()).Show();
     public void Dispose()
     {
@@ -53,7 +72,7 @@ namespace TR.BIDSid_SerCon
     }
     
     public static event EventHandler StringGot;
-    public static event EventHandler StringSent;
+    public static event EventHandler StringSend;
 
     /// <summary>Serialが接続に成功しているかどうか</summary>
     static public bool IsSerialConnected { get; private set; } = false;
@@ -86,7 +105,7 @@ namespace TR.BIDSid_SerCon
         else KeyUp(this, new InputEventArgs(-2, value - 4));
       }
     }
-
+    /*
     [DllImport("user32.dll")]
     public static extern IntPtr GetDesktopWindow();
     /// <summary>
@@ -124,180 +143,11 @@ namespace TR.BIDSid_SerCon
       PostMessage(BVEWindow, 0x0101, (IntPtr)num, (IntPtr)0);
       return true;
     }
-
+    */
     private static bool Disposing = false;
 
     private void DebugMsgShow() => MessageBox.Show("This is the Debug Build", "BIDSid_SerCon", MessageBoxButton.OK, MessageBoxImage.Information);
-    private void SerMon_StringSendReq(object sender, EventArgs e)
-    {
-      Se?.WriteLine((string)sender);
-      StringSent?.Invoke(sender, null);
-    }
-
-    /*
-    private static readonly string SRAMName = "BIDSSharedMem";
-    //SECTION_ALL_ACCESS=983071
-    [DllImport("kernel32.dll", SetLastError = true)]
-    static extern IntPtr CreateFileMapping(UIntPtr hFile, IntPtr lpAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
-    [DllImport("kernel32.dll", SetLastError = true)]
-    static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, uint dwNumberOfBytesToMap);
-    //[DllImport("kernel32.dll")]
-    //static extern void CopyMemory(IntPtr Destination, IntPtr Source, uint Length);//予約
-    [DllImport("kernel32.dll")]
-    static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
-    [DllImport("kernel32.dll")]
-    static extern bool CloseHandle(IntPtr hObject);
-
-
-    public struct Spec
-    {
-      /// <summary>
-      /// ブレーキ段数
-      /// </summary>
-      public int B;
-      /// <summary>
-      /// ノッチ段数
-      /// </summary>
-      public int P;
-      /// <summary>
-      /// ATS確認段数
-      /// </summary>
-      public int A;
-      /// <summary>
-      /// 常用最大段数
-      /// </summary>
-      public int J;
-      /// <summary>
-      /// 編成車両数
-      /// </summary>
-      public int C;
-    };
-    public struct State
-    {
-      /// <summary>
-      /// 列車位置[m]
-      /// </summary>
-      public double Z;
-      /// <summary>
-      /// 列車速度[km/h]
-      /// </summary>
-      public float V;
-      /// <summary>
-      /// 0時からの経過時間[ms]
-      /// </summary>
-      public int T;
-      /// <summary>
-      /// BC圧力[kPa]
-      /// </summary>
-      public float BC;
-      /// <summary>
-      /// MR圧力[kPa]
-      /// </summary>
-      public float MR;
-      /// <summary>
-      /// ER圧力[kPa]
-      /// </summary>
-      public float ER;
-      /// <summary>
-      /// BP圧力[kPa]
-      /// </summary>
-      public float BP;
-      /// <summary>
-      /// SAP圧力[kPa]
-      /// </summary>
-      public float SAP;
-      /// <summary>
-      /// 電流[A]
-      /// </summary>
-      public float I;
-    };
-    public struct Hand
-    {
-      /// <summary>
-      /// ブレーキハンドル位置
-      /// </summary>
-      public int B;
-      /// <summary>
-      /// ノッチハンドル位置
-      /// </summary>
-      public int P;
-      /// <summary>
-      /// レバーサーハンドル位置
-      /// </summary>
-      public int R;
-      /// <summary>
-      /// 定速制御状態
-      /// </summary>
-      public int C;
-    };
-    public struct Beacon
-    {
-      /// <summary>
-      /// Beaconの番号
-      /// </summary>
-      public int Num;
-      /// <summary>
-      /// 対応する閉塞の現示番号
-      /// </summary>
-      public int Sig;
-      /// <summary>
-      /// 対応する閉塞までの距離[m]
-      /// </summary>
-      public float X;
-      /// <summary>
-      /// Beaconの第三引数の値
-      /// </summary>
-      public int Data;
-    };
-    //Version 200ではBeaconData,IsKeyPushed,SignalSetIntはDIsabled
-    public struct BIDSSharedMemoryData
-    {
-      /// <summary>
-      /// SharedMemoryが有効かどうか
-      /// </summary>
-      public bool IsEnabled;
-      /// <summary>
-      /// SharedRAMの構造バージョン
-      /// </summary>
-      public int VersionNum;
-      /// <summary>
-      /// 車両スペック情報
-      /// </summary>
-      public Spec SpecData;
-      /// <summary>
-      /// 車両状態情報
-      /// </summary>
-      public State StateData;
-      /// <summary>
-      /// ハンドル位置情報
-      /// </summary>
-      public Hand HandleData;
-      /// <summary>
-      /// ドアが閉まっているかどうか
-      /// </summary>
-      public bool IsDoorClosed;
-      /// <summary>
-      /// Panelの表示番号配列
-      /// </summary>
-      [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
-      public int[] Panel;
-      /// <summary>
-      /// Soundの値配列
-      /// </summary>
-      [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)]
-      public int[] Sound;
-
-
-      //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-      //public Beacon[] BeaconData;
-      //[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-      //public bool[] IsKeysPushed;
-      //public int SignalSetInt;
-    };
-    static private readonly uint size = (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData));
-    static readonly IntPtr hSharedMemory = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, size, SRAMName);
-    static readonly IntPtr pMemory = MapViewOfFile(hSharedMemory, 983071, 0, 0, size);
-    static BIDSSharedMemoryData BSMD = new BIDSSharedMemoryData();*/
+    
  
     static SerialPort Se = null;
     
@@ -348,7 +198,11 @@ namespace TR.BIDSid_SerCon
         if (GetCom.Length == 1)
         {
           string ReturnData = DataSelect(GetCom[0]);
-          try{ if (ReturnData != string.Empty) StringSent?.Invoke(ReturnData, null);/*Se.WriteLine(ReturnData);*/ }
+          try
+          {
+            if (ReturnData != string.Empty) StringSend?.Invoke(ReturnData, null);
+            //Se.WriteLine(ReturnData);
+          }
           catch (Exception e)
           {
             if (MessageBox.Show("情報送信エラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
@@ -361,7 +215,11 @@ namespace TR.BIDSid_SerCon
           for (int i = 0; i < GetCom.Length - 1; i++)
           {
             string returnData = DataSelect(GetCom[i]);
-            try{ if (returnData != string.Empty) StringSent?.Invoke(returnData, null); /*Se.WriteLine(returnData);*/ }
+            try
+            {
+              if (returnData != string.Empty) StringSend?.Invoke(returnData, null);
+              //Se.WriteLine(returnData);
+            }
             catch (Exception e)
             {
               if (MessageBox.Show("情報送信エラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
@@ -393,9 +251,9 @@ namespace TR.BIDSid_SerCon
     //static int ConnectVersion = 0;
     //static readonly int ProgramVersion = 101;
 
-    static public byte[] GIPIBtnInd = Properties.Settings.Default.GIPIBtn;
+    //static public byte[] GIPIBtnInd = Properties.Settings.Default.GIPIBtn;
 
-    static SMemLib SML = new SMemLib();
+    static public SMemLib SML = new SMemLib();
     static public BIDSSharedMemoryData BSMD { get => SML.BIDSSMemData; }
     private string DataSelect(string GetString)
     {
@@ -615,7 +473,7 @@ namespace TR.BIDSid_SerCon
               if (serk < 128)
               {
                 //CI?.SetIsKeyPushed(serk, true);
-                KyDown(serk);
+                BtDown = serk;
                 return ReturnString + "0";
               }
               else
@@ -625,7 +483,7 @@ namespace TR.BIDSid_SerCon
             case "R":
               if (serk < 128)
               {
-                KyUp(serk);
+                BtUp = serk;
                 //CI?.SetIsKeyPushed(serk, false);
                 return ReturnString + "0";
               }
@@ -770,26 +628,26 @@ namespace TR.BIDSid_SerCon
               Bias = 0;
               break;
             case "H":
-              Bias = HandDBias;
+              Bias = AS.HandDBias;
               break;
             case "D":
-              Bias = DoorDBias;
+              Bias = AS.DoorDBias;
               break;
             case "E":
-              Bias = ElapDBias;
+              Bias = AS.ElapDBias;
               break;
             case "P":
-              if (PDAutoList?.Values.Contains(sera) != true) PDAutoList.Add("Serial", sera);
+              if (AS.PDAutoList?.Values.Contains(sera) != true) AS.PDAutoList.Add("Serial", sera);
               return ReturnString + (SML.Panels.Length > sera ? SML.Panels[sera] : 0).ToString();
             case "S":
-              if (SDAutoList?.Values.Contains(sera) != true) SDAutoList.Add("Serial", sera);
+              if (AS.SDAutoList?.Values.Contains(sera) != true) AS.SDAutoList.Add("Serial", sera);
               return ReturnString + (SML.Sounds.Length > sera ? SML.Sounds[sera] : 0).ToString();
           }
 
 
           if (Bias >= 0)
           {
-            if (AutoNumL?.Values.Contains(Bias + sera) != true) AutoNumL.Add("Serial", Bias + sera);
+            if (AS.AutoNumL?.Values.Contains(Bias + sera) != true) AS.AutoNumL.Add("Serial", Bias + sera);
             return ReturnString + "0";
           }
           else return "TRE3";
@@ -815,25 +673,25 @@ namespace TR.BIDSid_SerCon
               Biasd = 0;
               break;
             case "H":
-              Biasd = HandDBias;
+              Biasd = AS.HandDBias;
               break;
             case "D":
-              Biasd = DoorDBias;
+              Biasd = AS.DoorDBias;
               break;
             case "E":
-              Biasd = ElapDBias;
+              Biasd = AS.ElapDBias;
               break;
             case "P":
-              if (PDAutoList.Values.Contains(serd)) PDAutoList.Remove(new KeyValuePair<string, int>("Serial", serd));
+              if (AS.PDAutoList.Values.Contains(serd)) AS.PDAutoList.Remove(new KeyValuePair<string, int>("Serial", serd));
               return ReturnString + "0";
             case "S":
-              if (!SDAutoList.Values.Contains(serd)) SDAutoList.Remove(new KeyValuePair<string, int>("Serial", serd));
+              if (!AS.SDAutoList.Values.Contains(serd)) AS.SDAutoList.Remove(new KeyValuePair<string, int>("Serial", serd));
               return ReturnString + "0";
           }
 
           if (Biasd > 0)
           {
-            if (AutoNumL.Values.Contains(Biasd + serd)) AutoNumL.Remove(new KeyValuePair<string, int>("Serial", Biasd + serd));
+            if (AS.AutoNumL.Values.Contains(Biasd + serd)) AS.AutoNumL.Remove(new KeyValuePair<string, int>("Serial", Biasd + serd));
 
             return ReturnString + "0";
           }
@@ -844,5 +702,7 @@ namespace TR.BIDSid_SerCon
           return "TRE4";//識別子不正
       }
     }
+
+    
   }
 }

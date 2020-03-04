@@ -42,7 +42,7 @@ namespace TR.BIDSid_SerCon
     /// <param name="e">Event Data</param>
     private void Reset(object sender, RoutedEventArgs e)
     {
-      if (Properties.Settings.Default.GIPIBtn?.Length != 20) Properties.Settings.Default.GIPIBtn = new byte[20];
+      //if (Properties.Settings.Default.GIPIBtn?.Length != 20) Properties.Settings.Default.GIPIBtn = new byte[20];
       for (byte i = 0; i < 20; i++) BtnSettingsInd[i] = i;
       
       MessageBox.Show("Button設定を初期化しました。\n保存するには「ＯＫ」をクリックしてください。\n"+
@@ -60,8 +60,8 @@ namespace TR.BIDSid_SerCon
     /// <param name="e">Event Data</param>
     private void EnterEv(object sender, RoutedEventArgs e)
     {
-      Properties.Settings.Default.GIPIBtn = BtnSettingsInd;
-      IDev.GIPIBtnInd = BtnSettingsInd;
+      //Properties.Settings.Default.GIPIBtn = BtnSettingsInd;
+      //IDev.GIPIBtnInd = BtnSettingsInd;
       Close();
     }
 
@@ -74,8 +74,8 @@ namespace TR.BIDSid_SerCon
     private void OnLoad(object sender, RoutedEventArgs e)
     {
 
-      if (Properties.Settings.Default.GIPIBtn?.Length != 20) Reset(null, null);
-      else BtnSettingsInd = Properties.Settings.Default.GIPIBtn;
+      /*if (Properties.Settings.Default.GIPIBtn?.Length != 20) Reset(null, null);
+      else BtnSettingsInd = Properties.Settings.Default.GIPIBtn;*/
       int n = 0;
       for (int c = 0; c < 4; c++)
       {

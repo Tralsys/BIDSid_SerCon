@@ -49,9 +49,6 @@ namespace TR.BIDSid_SerCon
         IDev.IsSettingChanged = true;
       }
 
-
-
-      //id.Dispose();
       Close();
     }
 
@@ -90,7 +87,7 @@ namespace TR.BIDSid_SerCon
 
     private void GIPIBtnSettingWinShow(object sender, RoutedEventArgs e)=> (new GIPIBtnSetting()).Show();
 
-    private void SerMonShow(object sender, RoutedEventArgs e) => new Thread(new ThreadStart(SerMonShowVOID)).Start();
+    private void SerMonShow(object sender, RoutedEventArgs e) => SerMonShowVOID();
     
     private void SerMonShowVOID() => new SerMon().Show();
   }
