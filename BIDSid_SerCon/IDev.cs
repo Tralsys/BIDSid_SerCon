@@ -10,14 +10,13 @@ namespace TR.BIDSid_SerCon
 {
   public class IDev : IInputDevice
   {
-    public IDev() => MessageBox.Show("IDev init");
+    //public IDev() => MessageBox.Show("IDev init");
 
     public event InputEventHandler LeverMoved;
     public event InputEventHandler KeyDown;
     public event InputEventHandler KeyUp;
     public void Load(string settingsPath)
     {
-      MessageBox.Show("TEST");
       try
       {
 #if DEBUG
