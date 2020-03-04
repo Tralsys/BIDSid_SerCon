@@ -8,7 +8,7 @@ using System.Windows;
 // アセンブリに関連付けられている情報を変更するには、
 // これらの属性値を変更してください。
 [assembly: AssemblyTitle("BIDS シリアルコンバーター(id)")]
-[assembly: AssemblyDescription("BIDSpp.dllとともに用いて、ArduinoなどにBVEの運転情報を送信する")]
+[assembly: AssemblyDescription("TR.BIDSSMemLib.bve5.dllとともに用いて、ArduinoなどにBVEの運転情報を送信する")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Tech Otter")]
 [assembly: AssemblyProduct("BIDS シリアルコンバーター")]
