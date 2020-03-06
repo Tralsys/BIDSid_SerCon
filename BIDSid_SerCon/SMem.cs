@@ -7,13 +7,13 @@ namespace TR.BIDSid_SerCon
 {
   public class SMemLib : IDisposable
   {
+    const int PNL_SND_ARR_SIZE = 256;
+
     //SECTION_ALL_ACCESS=983071
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern IntPtr CreateFileMapping(UIntPtr hFile, IntPtr lpAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, uint dwNumberOfBytesToMap);
-    //[DllImport("kernel32.dll")]
-    //static extern void CopyMemory(IntPtr Destination, IntPtr Source, uint Length);//予約
     [DllImport("kernel32.dll")]
     static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
     [DllImport("kernel32.dll")]
@@ -46,8 +46,7 @@ namespace TR.BIDSid_SerCon
         _PanelD = value;
       }
     }
-    //private PanelD __PanelD = new PanelD() { Panels = new int[0] };
-    private int[] _PanelD = new int[0];
+    private int[] _PanelD = new int[PNL_SND_ARR_SIZE];
 
     /// <summary>Sound配列情報</summary>
     public int[] Sounds
@@ -60,16 +59,16 @@ namespace TR.BIDSid_SerCon
         _SoundD = value;
       }
     }
-    private int[] _SoundD = new int[0];
+    private int[] _SoundD = new int[PNL_SND_ARR_SIZE];
 
     static readonly IntPtr BSMDptr = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData)), "BIDSSharedMemory");
-    static readonly IntPtr Pptr = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(int)) * 257, "BIDSSharedMemoryPn");
-    static readonly IntPtr Sptr = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(int)) * 257, "BIDSSharedMemorySn");
+    static readonly IntPtr Pptr = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(int)) * (PNL_SND_ARR_SIZE + 1), "BIDSSharedMemoryPn");
+    static readonly IntPtr Sptr = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(int)) * (PNL_SND_ARR_SIZE + 1), "BIDSSharedMemorySn");
 
     static readonly IntPtr vBSMD = MapViewOfFile(BSMDptr, 983071, 0, 0, (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData)));
-    static readonly IntPtr vP = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData)) * 257, "BIDSSharedMemoryPn");
-    static readonly IntPtr vS = CreateFileMapping(UIntPtr.Zero, IntPtr.Zero, 4, 0, (uint)Marshal.SizeOf(typeof(BIDSSharedMemoryData)) * 257, "BIDSSharedMemorySn");
-    
+    static readonly IntPtr vP = MapViewOfFile(Pptr, 983071, 0, 0, (uint)Marshal.SizeOf(typeof(int)) * (PNL_SND_ARR_SIZE + 1));
+    static readonly IntPtr vS = MapViewOfFile(Sptr, 983071, 0, 0, (uint)Marshal.SizeOf(typeof(int)) * (PNL_SND_ARR_SIZE + 1));
+
     bool IsDisposing = false;
     public void Dispose()
     {
@@ -109,13 +108,13 @@ namespace TR.BIDSid_SerCon
     public void PRead()
     {
       if (IsDisposing) return;
-      int[] m = Ptr2IntArr(vP, 257);
+      int[] m = Ptr2IntArr(vP, PNL_SND_ARR_SIZE + 1);
       Array.Copy(m, 1, Panels, 0, m.Length - 1);
     }
     public void SRead()
     {
       if (IsDisposing) return;
-      int[] m = Ptr2IntArr(vS, 257);
+      int[] m = Ptr2IntArr(vS, PNL_SND_ARR_SIZE + 1);
       Array.Copy(m, 1, Sounds, 0, m.Length - 1);
     }
     private int[] Ptr2IntArr(IntPtr ptr,int len)
