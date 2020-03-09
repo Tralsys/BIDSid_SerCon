@@ -33,6 +33,7 @@ namespace TR.BIDSid_SerCon
       catch(Exception e) { MessageBox.Show(e.Message, "BIDS_SerCon LoadM"); }
     }
 
+
     private void AS_ASSend(object sender, EventArgs e)
     {
       byte[] a = (byte[])sender;
@@ -61,7 +62,8 @@ namespace TR.BIDSid_SerCon
         SerialTick();
       }catch(Exception e)
       {
-        MessageBox.Show(e.Message, "BIDSid_SerCon TickM");
+        if (MessageBox.Show("Unknown Error\n" + e.Message + "\n接続を継続しますか？", "BIDSid_SerCon TickM",
+          MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No) SerialDispose();
       }
     }
     public void SetAxisRanges(int[][] ranges)
@@ -179,8 +181,15 @@ namespace TR.BIDSid_SerCon
     {
       SML?.Read();
       if (Se == null) return;
-      if (Se.IsOpen == false) return;
-      if (Se.BytesToRead <= 0) return;
+      try
+      {
+        if (Se.IsOpen == false) return;
+        if (Se.BytesToRead <= 0) return;
+      }catch(Exception e)
+      {
+        if (MessageBox.Show("Serial Checkエラー\n" + e.Message + "\n接続を継続しますか？", "BIDS SerCon",
+          MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No) SerialDispose();
+      }
       string GetStr = string.Empty;
       try{ GetStr = Se.ReadExisting(); }
       catch (Exception e)
@@ -193,14 +202,14 @@ namespace TR.BIDSid_SerCon
       try
       {
         if (!GetStr.Contains("\n")) { LastCom += GetStr; return; }
-        string[] GetCom = (LastCom + GetStr).Split('\n');
+        string[] GetCom = (LastCom + GetStr).Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         if (GetCom.Length == 1)
         {
           string ReturnData = DataSelect(GetCom[0]);
           try
           {
             if (ReturnData != string.Empty) StringSend?.Invoke(ReturnData, null);
-            //Se.WriteLine(ReturnData);
+            Se?.WriteLine(ReturnData);
           }
           catch (Exception e)
           {
@@ -211,13 +220,16 @@ namespace TR.BIDSid_SerCon
         }
         else
         {
-          for (int i = 0; i < GetCom.Length - 1; i++)
+          for (int i = 0; i < GetCom.Length; i++)
           {
             string returnData = DataSelect(GetCom[i]);
             try
             {
-              if (returnData != string.Empty) StringSend?.Invoke(returnData, null);
-              //Se.WriteLine(returnData);
+              if (returnData != string.Empty)
+              {
+                StringSend?.Invoke(returnData, null);
+                Se.WriteLine(returnData);
+              }
             }
             catch (Exception e)
             {

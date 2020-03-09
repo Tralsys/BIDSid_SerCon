@@ -9,7 +9,7 @@ namespace TR.BIDSid_SerCon
   public static class AS
   {
     public static event EventHandler ASSend;
-    public static bool IsStarted = false;
+    public static bool IsStarted = true;
     public const int OpenDBias = 1000000;
     public const int ElapDBias = 100000;
     public const int DoorDBias = 10000;
@@ -111,12 +111,12 @@ namespace TR.BIDSid_SerCon
         TimeSpan ots = TimeSpan.FromMilliseconds(e.OldData.StateData.T);
         TimeSpan nts = TimeSpan.FromMilliseconds(e.NewData.StateData.T);
         ICollection<int> IC = AutoNumL.Values;
-        ICollection<int> ICR = default;
+        ICollection<int> ICR = new List<int>();
 
         for (int ind = 0; ind < IC.Count; ind++)
         {
           int i = IC.ElementAt(ind);
-          if (!ICR.Contains(i))
+          if (ICR?.Contains(i) != true)
           {
             ICR.Add(i);
 
