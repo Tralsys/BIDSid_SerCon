@@ -28,8 +28,8 @@ namespace TR.BIDSid_SerCon
     private void CancelEv(object sender, RoutedEventArgs e) => Close();
     
     private void OnLoad(object sender, RoutedEventArgs e) => ReLoad(null, null);
-    
-    private readonly List<int> BaudRateList = new List<int>() { 4800, 9600, 19200, 38400, 57600, 115200 };
+
+    private readonly List<int> BaudRateList = new List<int>() { 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800 };
     private void EnterEv(object sender, RoutedEventArgs e)
     {
       if (Properties.Settings.Default.COMPortName != (string)COMPortListBox.SelectedItem ||
